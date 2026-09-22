@@ -9,6 +9,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.round
 
 private val dateFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)
@@ -16,9 +17,19 @@ private val dateFormatter: DateTimeFormatter =
 private val monthFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US)
 
+private val shortMonthFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("MMM", Locale.US)
+
 fun formatDate(date: LocalDate): String = date.format(dateFormatter)
 
 fun formatMonth(month: YearMonth): String = month.format(monthFormatter)
+
+fun formatMonthShort(month: YearMonth): String = month.format(shortMonthFormatter)
+
+fun formatHitRate(rate: Double?): String {
+    if (rate == null) return "—"
+    return "${round(rate * 100).toInt()}%"
+}
 
 fun sideLabel(side: OptionSide): String = if (side == OptionSide.BUY) "Buy" else "Sell"
 

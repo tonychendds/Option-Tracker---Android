@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.optiontracker.app.data.PositionRepository
 import com.optiontracker.app.domain.pnl.HistoryMonth
 import com.optiontracker.app.domain.pnl.availableReportYears
+import com.optiontracker.app.domain.pnl.MonthReportRow
 import com.optiontracker.app.domain.pnl.groupClosedTrades
+import com.optiontracker.app.domain.pnl.monthlyReport
 import com.optiontracker.app.domain.pnl.realizedYearTotal
 import com.optiontracker.app.ui.ReportYearStore
 import java.time.LocalDate
@@ -24,6 +26,7 @@ data class HistoryUiState(
     val availableYears: List<Int> = emptyList(),
     val yearTotalCents: Long = 0L,
     val yearTradeCount: Int = 0,
+    val monthlyReport: List<MonthReportRow> = emptyList(),
 )
 
 class HistoryViewModel(
@@ -54,6 +57,7 @@ class HistoryViewModel(
             availableYears = years,
             yearTotalCents = yearTotal.totalCents,
             yearTradeCount = yearTotal.tradeCount,
+            monthlyReport = monthlyReport(filtered, year),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HistoryUiState())
 
