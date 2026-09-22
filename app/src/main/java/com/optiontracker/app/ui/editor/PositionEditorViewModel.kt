@@ -90,17 +90,17 @@ class PositionEditorViewModel(
                 _state.update {
                     it.copy(
                         ticker = draft.ticker,
-                        side = draft.side,
+                        side = draft.side ?: it.side,
                         type = draft.type,
                         strike = draft.strikeText,
                         expiry = draft.expiry,
-                        contracts = draft.contractsText,
-                        premium = draft.premiumText,
+                        contracts = if ("quantity" in draft.missingFields) "" else draft.contractsText,
+                        premium = if ("price" in draft.missingFields) "" else draft.premiumText,
                         fees = draft.feesText,
-                        openedOn = draft.openedOn,
-                        notes = draft.notes,
+                        openedOn = draft.openedOn ?: it.openedOn,
+                        notes = draft.notes.ifBlank { it.notes },
                         importMessage = draft.summary,
-                        importFailed = false,
+                        importFailed = draft.missingFields.isNotEmpty(),
                         errors = emptyMap(),
                     )
                 }

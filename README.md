@@ -106,13 +106,13 @@ Unit tests for P/L math and position create, read, update, close, and delete:
 
 Home → **+** → **Add from screenshot**, or **Add from screenshot** on the add-position screen. Pick a screenshot of a Charles Schwab trade-details page.
 
-The app reads the text **on the device** with Google ML Kit. The image is not uploaded, and the app has no network permission. OCR does not need a connection.
+The app reads the text **on the device** with Google ML Kit. The image is not uploaded, and the app has no network permission. OCR does not need a connection. A label on the left and its value on the right are paired by their position on the screen, so a two-column ticket still lines up.
 
 A line such as `TSLL 09/25/2026 11.00 C` supplies the ticker, expiration, strike, and call or put. **Sell to Open** and **Buy to Open** set the side. **Price** is the premium per share. **Quantity** is the number of contracts. Commission, industry fee, and similar fee lines are added together. The trade date is the open date. The order id is stored in notes.
 
 **Buy to Close** and **Sell to Close** still open the add form so you can review them. Saving creates a new open position. It does not close an existing trade.
 
-If the screenshot cannot be read, the form stays empty and says so. You can type the trade yourself.
+If the symbol line is read but quantity, price, or the trade date is not, the form fills in what was found and names the missing fields. If the symbol line cannot be read, the form stays empty and says so. You can type the trade yourself.
 
 ## Import CSV
 
