@@ -1,0 +1,219 @@
+package com.optiontracker.app.ui.home
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.model.PositionStatus
+import com.optiontracker.app.domain.money.Money
+import com.optiontracker.app.domain.pnl.ActivityKind
+import com.optiontracker.app.domain.pnl.RecentActivity
+import com.optiontracker.app.domain.pnl.realizedPnlCents
+import com.optiontracker.app.ui.components.EmptyState
+import com.optiontracker.app.ui.components.ScreenColumn
+import com.optiontracker.app.ui.components.TrackerScaffold
+import com.optiontracker.app.ui.format.contractsLabel
+import com.optiontracker.app.ui.format.formatDate
+import com.optiontracker.app.ui.format.pnlColor
+import com.optiontracker.app.ui.format.sideLabel
+import com.optiontracker.app.ui.format.typeLabel
+import com.optiontracker.app.ui.navigation.Routes
+
+@Composable
+fun DashboardRoute(
+    viewModel: DashboardViewModel,
+    onNavigate: (String) -> Unit,
+    onAdd: () -> Unit,
+    onOpenPosition: (Long) -> Unit,
+    onOpenHistory: (Long) -> Unit,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    DashboardScreen(
+        state = state,
+        onNavigate = onNavigate,
+        onAdd = onAdd,
+        onOpenActivity = { activity ->
+            if (activity.position.status == PositionStatus.OPEN) {
+                onOpenPosition(activity.position.id)
+            } else {
+                onOpenHistory(activity.position.id)
+            }
+        },
+    )
+}
+
+@Composable
+fun DashboardScreen(
+    state: DashboardUiState,
+    onNavigate: (String) -> Unit,
+    onAdd: () -> Unit,
+    onOpenActivity: (RecentActivity) -> Unit,
+) {
+    TrackerScaffold(
+        title = "Home",
+        currentRoute = Routes.HOME,
+        onNavigate = onNavigate,
+        showAd = true,
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAdd) {
+                Icon(Icons.Filled.Add, contentDescription = "Add position")
+            }
+        },
+    ) { padding ->
+        when (state) {
+            DashboardUiState.Loading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is DashboardUiState.Ready -> DashboardContent(padding, state, onOpenActivity)
+        }
+    }
+}
+
+@Composable
+private fun DashboardContent(
+    padding: PaddingValues,
+    state: DashboardUiState.Ready,
+    onOpenActivity: (RecentActivity) -> Unit,
+) {
+    val summary = state.summary
+    ScreenColumn(padding) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Open premium", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        Money.formatSigned(summary.netPremiumCents),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = pnlColor(summary.netPremiumCents),
+                    )
+                    Text(
+                        "Net cash from premiums still open. Credits are positive and debits are negative. This is not a live mark.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard("Open", summary.openCount.toString(), Modifier.weight(1f))
+                StatCard("Contracts", summary.openContracts.toString(), Modifier.weight(1f))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard("Calls", summary.callContracts.toString(), Modifier.weight(1f))
+                StatCard("Puts", summary.putContracts.toString(), Modifier.weight(1f))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard("Long", summary.longContracts.toString(), Modifier.weight(1f))
+                StatCard("Short", summary.shortContracts.toString(), Modifier.weight(1f))
+            }
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Realized P/L this month", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        Money.formatSigned(summary.realizedThisMonthCents),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = pnlColor(summary.realizedThisMonthCents),
+                    )
+                    Text(
+                        if (summary.closedThisMonthCount == 1) {
+                            "1 closed trade"
+                        } else {
+                            "${summary.closedThisMonthCount} closed trades"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text("Recent activity", style = MaterialTheme.typography.titleMedium)
+            if (summary.recent.isEmpty()) {
+                EmptyState(
+                    title = "No trades yet",
+                    body = "Add an open option position. When you close it, realized profit or loss shows up here and in History.",
+                )
+            } else {
+                summary.recent.forEach { activity ->
+                    ActivityRow(activity, onClick = { onOpenActivity(activity) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(modifier = modifier) {
+        Column(Modifier.padding(16.dp)) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.titleLarge)
+        }
+    }
+}
+
+@Composable
+private fun ActivityRow(activity: RecentActivity, onClick: () -> Unit) {
+    val position = activity.position
+    val kind = if (activity.kind == ActivityKind.OPENED) "Opened" else "Closed"
+    val pnl = if (activity.kind == ActivityKind.CLOSED) position.realizedPnlCents() else null
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(position.ticker, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "$kind · ${sideLabel(position.side)} ${contractsLabel(position.contracts)} ${typeLabel(position.type)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    formatDate(activity.date),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (pnl != null) {
+                Text(Money.formatSigned(pnl), color = pnlColor(pnl), style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+}
