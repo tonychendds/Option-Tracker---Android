@@ -23,6 +23,8 @@ class FakePositionDao : PositionDao {
     override suspend fun getById(id: Long): PositionEntity? =
         rows.value.firstOrNull { it.id == id }
 
+    override suspend fun getAll(): List<PositionEntity> = rows.value
+
     override suspend fun insert(entity: PositionEntity): Long {
         val id = if (entity.id == 0L) nextId++ else entity.id
         rows.value = rows.value + entity.copy(id = id)

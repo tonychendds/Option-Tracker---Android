@@ -114,6 +114,8 @@ A line such as `TSLL 09/25/2026 11.00 C` supplies the ticker, expiration, strike
 
 If the symbol line is read but quantity, price, or the trade date is not, the form fills in what was found and names the missing fields. If the symbol line cannot be read, the form stays empty and says so. You can type the trade yourself.
 
+Saving compares the form with trades already stored, both open and closed. A match is the same ticker, side, call or put, strike, expiration, contracts, and open date, with an entry premium within $0.01. The same Schwab order id in the notes also counts. Save then asks you to cancel or save anyway. After a screenshot fills the form, a banner names the possible duplicate before you tap Save.
+
 ## Import CSV
 
 Settings → **Import CSV** opens a file picker. The file stays on the device; nothing is uploaded. Confirming the import **replaces all local trades**. Rows that fail validation are skipped and counted. If the file has no usable rows, existing trades are left in place.

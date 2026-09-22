@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.optiontracker.app.data.PositionRepository
+import com.optiontracker.app.domain.duplicate.DuplicateDetector
+import com.optiontracker.app.domain.duplicate.TradeIdentity
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
@@ -42,6 +44,8 @@ data class EditorUiState(
     val saving: Boolean = false,
     val importMessage: String? = null,
     val importFailed: Boolean = false,
+    val duplicateBanner: String? = null,
+    val duplicatePrompt: String? = null,
 )
 
 sealed interface EditorEvent {
@@ -83,27 +87,27 @@ class PositionEditorViewModel(
         if (positionId != null) return
         when (result) {
             is BrokerParseResult.Failed -> _state.update {
-                it.copy(importMessage = result.message, importFailed = true)
+                it.copy(importMessage = result.message, importFailed = true, duplicateBanner = null)
             }
             is BrokerParseResult.Ready -> {
                 val draft = result.draft
-                _state.update {
-                    it.copy(
-                        ticker = draft.ticker,
-                        side = draft.side ?: it.side,
-                        type = draft.type,
-                        strike = draft.strikeText,
-                        expiry = draft.expiry,
-                        contracts = if ("quantity" in draft.missingFields) "" else draft.contractsText,
-                        premium = if ("price" in draft.missingFields) "" else draft.premiumText,
-                        fees = draft.feesText,
-                        openedOn = draft.openedOn ?: it.openedOn,
-                        notes = draft.notes.ifBlank { it.notes },
-                        importMessage = draft.summary,
-                        importFailed = draft.missingFields.isNotEmpty(),
-                        errors = emptyMap(),
-                    )
-                }
+                val filled = _state.value.copy(
+                    ticker = draft.ticker,
+                    side = draft.side ?: _state.value.side,
+                    type = draft.type,
+                    strike = draft.strikeText,
+                    expiry = draft.expiry,
+                    contracts = if ("quantity" in draft.missingFields) "" else draft.contractsText,
+                    premium = if ("price" in draft.missingFields) "" else draft.premiumText,
+                    fees = draft.feesText,
+                    openedOn = draft.openedOn ?: _state.value.openedOn,
+                    notes = draft.notes.ifBlank { _state.value.notes },
+                    importMessage = draft.summary,
+                    importFailed = draft.missingFields.isNotEmpty(),
+                    errors = emptyMap(),
+                )
+                _state.value = filled
+                refreshDuplicateBanner(filled)
             }
         }
     }
@@ -119,7 +123,13 @@ class PositionEditorViewModel(
     fun onOpenedOn(value: LocalDate) = update { copy(openedOn = value) }
     fun onNotes(value: String) = update { copy(notes = value.take(PositionValidator.MAX_NOTES)) }
 
-    fun save() {
+    fun save() = persist(ignoreDuplicate = false)
+
+    fun saveAnyway() = persist(ignoreDuplicate = true)
+
+    fun dismissDuplicate() = update { copy(duplicatePrompt = null) }
+
+    private fun persist(ignoreDuplicate: Boolean) {
         val current = _state.value
         val errors = PositionValidator.validateEntry(
             ticker = current.ticker,
@@ -131,7 +141,7 @@ class PositionEditorViewModel(
             notes = current.notes,
         )
         if (errors.isNotEmpty()) {
-            _state.update { it.copy(errors = errors) }
+            _state.update { it.copy(errors = errors, duplicatePrompt = null) }
             return
         }
         val expiry = current.expiry ?: return
@@ -140,7 +150,21 @@ class PositionEditorViewModel(
         val premium = Money.parseCents(current.premium) ?: return
         val fees = PositionValidator.parseOptionalFees(current.fees) ?: return
         viewModelScope.launch {
-            _state.update { it.copy(saving = true, errors = emptyMap()) }
+            if (!ignoreDuplicate) {
+                val match = DuplicateDetector.find(
+                    candidate = identityOrNull(current),
+                    notes = current.notes,
+                    existing = repository.listPositions(),
+                    ignoreId = positionId ?: 0L,
+                )
+                if (match != null) {
+                    _state.update {
+                        it.copy(duplicatePrompt = DuplicateDetector.summary(match), saving = false)
+                    }
+                    return@launch
+                }
+            }
+            _state.update { it.copy(saving = true, errors = emptyMap(), duplicatePrompt = null) }
             repository.save(
                 Position(
                     id = positionId ?: 0L,
@@ -166,6 +190,37 @@ class PositionEditorViewModel(
             )
             _events.emit(EditorEvent.Saved)
         }
+    }
+
+    private fun refreshDuplicateBanner(current: EditorUiState) {
+        if (positionId != null) return
+        viewModelScope.launch {
+            val match = DuplicateDetector.find(
+                candidate = identityOrNull(current),
+                notes = current.notes,
+                existing = repository.listPositions(),
+            )
+            _state.update { it.copy(duplicateBanner = match?.let(DuplicateDetector::banner)) }
+        }
+    }
+
+    private fun identityOrNull(current: EditorUiState): TradeIdentity? {
+        val expiry = current.expiry ?: return null
+        val strike = Money.parseCents(current.strike) ?: return null
+        val contracts = current.contracts.toIntOrNull() ?: return null
+        val premium = Money.parseCents(current.premium) ?: return null
+        if (current.ticker.isBlank()) return null
+        return TradeIdentity(
+            ticker = current.ticker,
+            side = current.side,
+            type = current.type,
+            strikeCents = strike,
+            expiry = expiry,
+            contracts = contracts,
+            openedOn = current.openedOn,
+            entryPremiumCents = premium,
+            notes = current.notes,
+        )
     }
 
     private fun update(transform: EditorUiState.() -> EditorUiState) {

@@ -20,6 +20,9 @@ interface PositionDao {
     @Query("SELECT * FROM positions WHERE id = :id")
     suspend fun getById(id: Long): PositionEntity?
 
+    @Query("SELECT * FROM positions")
+    suspend fun getAll(): List<PositionEntity>
+
     @Insert
     suspend fun insert(entity: PositionEntity): Long
 

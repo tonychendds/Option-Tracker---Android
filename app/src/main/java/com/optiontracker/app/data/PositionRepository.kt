@@ -42,6 +42,8 @@ class PositionRepository(
 
     suspend fun getPosition(id: Long): Position? = dao.getById(id)?.toDomain()
 
+    suspend fun listPositions(): List<Position> = dao.getAll().map { it.toDomain() }
+
     suspend fun save(position: Position): Long {
         val normalized = position.copy(
             ticker = position.ticker.trim().uppercase(Locale.US),

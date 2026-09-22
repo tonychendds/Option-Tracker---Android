@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import android.net.Uri
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,6 +22,8 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.duplicate.DuplicateDetector
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.validation.Fields
@@ -79,6 +83,8 @@ fun PositionEditorRoute(
         onOpenedOn = viewModel::onOpenedOn,
         onNotes = viewModel::onNotes,
         onSave = viewModel::save,
+        onDismissDuplicate = viewModel::dismissDuplicate,
+        onSaveAnyway = viewModel::saveAnyway,
     )
 }
 
@@ -99,6 +105,8 @@ fun PositionEditorScreen(
     onOpenedOn: (java.time.LocalDate) -> Unit,
     onNotes: (String) -> Unit,
     onSave: () -> Unit,
+    onDismissDuplicate: () -> Unit = {},
+    onSaveAnyway: () -> Unit = {},
 ) {
     TrackerScaffold(
         title = if (state.editing) "Edit position" else "Add position",
@@ -137,6 +145,8 @@ fun PositionEditorScreen(
                     onOpenedOn = onOpenedOn,
                     onNotes = onNotes,
                     onSave = onSave,
+                    onDismissDuplicate = onDismissDuplicate,
+                    onSaveAnyway = onSaveAnyway,
                 )
             }
         }
@@ -159,6 +169,8 @@ private fun EditorForm(
     onOpenedOn: (java.time.LocalDate) -> Unit,
     onNotes: (String) -> Unit,
     onSave: () -> Unit,
+    onDismissDuplicate: () -> Unit,
+    onSaveAnyway: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -181,6 +193,20 @@ private fun EditorForm(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+        state.duplicateBanner?.let { banner ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                ),
+            ) {
+                Text(
+                    banner,
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
         state.importMessage?.let { message ->
             Card(
@@ -306,6 +332,30 @@ private fun EditorForm(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(if (state.editing) "Save changes" else "Save position")
+        }
+    }
+    state.duplicatePrompt?.let { prompt ->
+        val cancelFocus = remember { FocusRequester() }
+        AlertDialog(
+            onDismissRequest = onDismissDuplicate,
+            title = { Text(DuplicateDetector.DIALOG_TITLE) },
+            text = { Text(prompt) },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismissDuplicate,
+                    modifier = Modifier.focusRequester(cancelFocus),
+                ) { Text("Cancel") }
+            },
+            confirmButton = {
+                TextButton(onClick = onSaveAnyway) { Text("Save anyway") }
+            },
+        )
+        LaunchedEffect(prompt) {
+            try {
+                cancelFocus.requestFocus()
+            } catch (_: IllegalStateException) {
+                // The cancel button is not attached yet.
+            }
         }
     }
 }
