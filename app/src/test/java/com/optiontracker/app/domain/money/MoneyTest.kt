@@ -35,6 +35,19 @@ class MoneyTest {
     }
 
     @Test
+    fun roundsSpreadsheetPrecisionToCents() {
+        assertEquals(1_100L, Money.parseRoundedCents("11.0"))
+        assertEquals(0L, Money.parseRoundedCents("0.0000"))
+        assertEquals(727L, Money.parseRoundedCents("7.2727"))
+        assertEquals(5L, Money.parseRoundedCents("0.046"))
+        assertEquals(2L, Money.parseRoundedCents("0.0202"))
+        assertEquals(685_000L, Money.parseSignedRoundedCents("6850.00"))
+        assertEquals(-500L, Money.parseSignedRoundedCents("-5.004"))
+        assertNull(Money.parseRoundedCents(""))
+        assertNull(Money.parseCents("7.2727"))
+    }
+
+    @Test
     fun formatsUsd() {
         assertEquals("$2.50", Money.format(250))
         assertEquals("-$1.30", Money.format(-130))

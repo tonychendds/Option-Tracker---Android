@@ -114,15 +114,15 @@ status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,
 | Column | Values |
 | --- | --- |
 | status | `Open` or `Closed` |
-| account | Free text such as IRA, CASH, HSA, or ROTH. Shown on the position. |
+| account | Free text such as IRA, CASH, HSA, or ROTH. Blank is allowed. Shown on the position. |
 | ticker | Such as `AAPL` or `BRK.B` |
 | side | `Buy` or `Sell` |
 | right | `Call` or `Put` |
-| strike | Strike price in dollars |
+| strike | Strike price in dollars. `11.0` is $11.00. Extra decimals are rounded half-up to the nearest cent. |
 | openDate, expDate | `yyyy-MM-dd` |
 | contracts | Whole number of contracts |
-| entryPremium | Premium per share. Blank is not allowed. |
-| exitPremium | Premium per share. Blank is fine for an open trade. A closed trade needs this or `realizedOverride`. |
+| entryPremium | Premium per share. Blank is not allowed. Extra decimals are rounded half-up to the nearest cent. |
+| exitPremium | Premium per share. Blank is fine for an open trade. A closed trade needs this or `realizedOverride`. `0.0000` is a zero premium. Extra decimals are rounded half-up to the nearest cent. |
 | fees | Dollars, blank means 0 |
 | notes | Optional text. Quotes are allowed when the note contains a comma. |
 | realizedOverride | Optional dollar P/L for a closed trade. See above. |

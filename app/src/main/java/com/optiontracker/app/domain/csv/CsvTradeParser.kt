@@ -43,6 +43,9 @@ data class CsvImportResult(
  * When `realizedOverride` is present on a closed row, that dollar amount is the
  * realized P/L shown in the app. Entry and exit premiums are still stored, but
  * they are not used for the displayed result.
+ *
+ * Strike, premiums, fees, and the override may have more than two decimal places.
+ * Those amounts are rounded half-up to the nearest cent. A blank account is allowed.
  */
 object CsvTradeParser {
     val requiredColumns = listOf(
@@ -127,7 +130,7 @@ object CsvTradeParser {
             "put" -> OptionType.PUT
             else -> return RowMapping.Bad("Right must be Call or Put")
         }
-        val strike = Money.parseCents(cell("strike"))
+        val strike = Money.parseRoundedCents(cell("strike"))
         if (strike == null || strike <= 0L) {
             return RowMapping.Bad("Strike must be a positive amount")
         }
@@ -137,12 +140,12 @@ object CsvTradeParser {
         if (contracts == null || contracts !in 1..PositionValidator.MAX_CONTRACTS) {
             return RowMapping.Bad("Contracts must be a whole number from 1 to ${PositionValidator.MAX_CONTRACTS}")
         }
-        val entryPremium = Money.parseCents(cell("entrypremium"))
+        val entryPremium = Money.parseRoundedCents(cell("entrypremium"))
         if (entryPremium == null) {
             return RowMapping.Bad("Entry premium must be a non-negative amount")
         }
         val feesText = cell("fees")
-        val fees = if (feesText.isEmpty()) 0L else Money.parseCents(feesText)
+        val fees = if (feesText.isEmpty()) 0L else Money.parseRoundedCents(feesText)
         if (fees == null) return RowMapping.Bad("Fees must be a non-negative amount")
         val notes = cell("notes")
         if (notes.length > PositionValidator.MAX_NOTES) {
@@ -152,13 +155,13 @@ object CsvTradeParser {
         val realizedOverride = if (overrideText.isEmpty()) {
             null
         } else {
-            Money.parseSignedCents(overrideText) ?: return RowMapping.Bad("Realized P/L must be a dollar amount")
+            Money.parseSignedRoundedCents(overrideText) ?: return RowMapping.Bad("Realized P/L must be a dollar amount")
         }
         val exitText = cell("exitpremium")
         val exitPremium = if (exitText.isEmpty()) {
             null
         } else {
-            Money.parseCents(exitText) ?: return RowMapping.Bad("Exit premium must be a non-negative amount")
+            Money.parseRoundedCents(exitText) ?: return RowMapping.Bad("Exit premium must be a non-negative amount")
         }
         if (status == PositionStatus.CLOSED && exitPremium == null && realizedOverride == null) {
             return RowMapping.Bad("A closed trade needs an exit premium or a realized P/L")

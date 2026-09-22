@@ -1,0 +1,103 @@
+status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+Closed,,TSLL,Sell,Put,11.0,2026-03-25,2026-05-01,11,7.2727,1.0455,0,imported from Options sheet (row 2),6850.00
+Closed,,IBIT,Sell,Call,47.0,2026-04-20,2026-05-08,47,0.1826,0.0000,0,imported from Options sheet (row 3),858.00
+Closed,,AMZN,Sell,Call,270.0,2026-04-20,2026-05-22,1,3.89,0.0000,0,imported from Options sheet (row 4),389.00
+Closed,,TSLL,Sell,Call,16.0,2026-04-20,2026-04-24,16,2.0831,0.0000,0,imported from Options sheet (row 5),3333.00
+Closed,,AMD,Sell,Call,320.0,2026-04-22,2026-05-29,4,2.48,0.0000,0,imported from Options sheet (row 6),992.00
+Closed,,TSLA,Sell,Call,500.0,2026-04-27,2026-05-01,500,0.046,0.0202,0,imported from Options sheet (row 7),1291.00
+Closed,,TSLL,Sell,Put,11.0,2026-04-30,2026-05-15,11,2.3027,1.3327,0,imported from Options sheet (row 8),1067.00
+Closed,,TSLA,Sell,Call,420.0,2026-04-30,2026-05-15,5,2.042,0.0000,0,imported from Options sheet (row 9),1021.00
+Closed,,TSLA,Sell,Call,420.0,2026-04-30,2026-05-15,5,2.042,0.0000,0,imported from Options sheet (row 10),1021.00
+Closed,,CPER,Sell,Call,40.0,2026-04-30,2026-05-15,40,0.0732,0.0000,0,imported from Options sheet (row 11),293.00
+Closed,,TSLL,Sell,Call,13.5,2026-05-01,2026-05-01,1,5.33,0.0000,0,imported from Options sheet (row 12),533.00
+Closed,,TSLL,Sell,Put,12.0,2026-05-04,2026-05-08,12,1.205,0.0000,0,imported from Options sheet (row 13),1446.00
+Closed,,TSLL,Sell,Call,14.0,2026-05-06,2026-05-08,250,0.1333,0.0000,0,imported from Options sheet (row 14),3333.00
+Closed,,NVDA,Sell,Call,210.0,2026-05-06,2026-05-08,10,1.293,0.0000,0,imported from Options sheet (row 15),1293.00
+Closed,,TSLL,Sell,Call,15.0,2026-05-07,2026-05-08,60,0.1733,0.0000,0,imported from Options sheet (row 16),1040.00
+Closed,,NVDA,Sell,Call,222.5,2026-05-08,2026-05-22,10,0.887,0.0000,0,imported from Options sheet (row 17),887.00
+Closed,,TSLL,Sell,Call,25.0,2026-05-08,2026-12-18,250,0.3967,0.1600,0,imported from Options sheet (row 18),5917.00
+Closed,,TSLL,Sell,Call,18.0,2026-05-08,2026-06-05,60,0.0868,0.0000,0,imported from Options sheet (row 19),521.00
+Closed,,TSLA,Sell,Call,500.0,2026-05-11,2026-08-21,5,1.086,0.0000,0,imported from Options sheet (row 20),543.00
+Closed,,DRAM,Sell,Put,50.0,2026-05-11,2026-05-22,10,1.743,0.0000,0,imported from Options sheet (row 21),1743.00
+Closed,,IBIT,Sell,Call,47.0,2026-05-12,2026-05-22,25,0.4932,0.0000,0,imported from Options sheet (row 22),1233.00
+Closed,,TSLL,Sell,Put,14.0,2026-05-12,2026-05-15,90,0.1433,0.0000,0,imported from Options sheet (row 23),1290.00
+Closed,,TSLA,Sell,Call,475.0,2026-05-12,2026-05-15,10,1.183,0.0000,0,imported from Options sheet (row 24),1183.00
+Closed,,TSLA,Sell,Call,480.0,2026-05-15,2026-06-26,5,2.186,0.0000,0,imported from Options sheet (row 25),1093.00
+Closed,,TSLL,Sell,Put,13.0,2026-05-18,2026-05-22,90,0.1433,0.0000,0,imported from Options sheet (row 26),1290.00
+Closed,,TSLA,Sell,Call,437.5,2026-05-21,2026-05-22,5,0.792,0.0000,0,imported from Options sheet (row 27),396.00
+Closed,,TSM,Sell,Call,410.0,2026-05-21,2026-05-22,1,3.79,0.0000,0,imported from Options sheet (row 28),379.00
+Closed,,AMD,Sell,Call,450.0,2026-05-27,2027-09-17,2,4.75,0.0000,0,imported from Options sheet (row 29),950.00
+Closed,,DRAM,Sell,Put,57.0,2026-05-27,2026-05-29,15,0.6333,0.0000,0,imported from Options sheet (row 30),950.00
+Closed,,RDW,Sell,Put,22.0,2026-05-27,2026-05-29,20,0.6,0.0000,0,imported from Options sheet (row 31),1200.00
+Closed,,TSLA,Sell,Call,450.0,2026-05-28,2026-05-29,5,1.592,0.0000,0,imported from Options sheet (row 32),796.00
+Closed,,NVDA,Sell,Call,217.5,2026-05-28,2026-05-29,12,0.8633,0.0000,0,imported from Options sheet (row 33),1036.00
+Closed,,TSM,Sell,Call,425.0,2026-05-28,2026-05-29,1,3.5,0.0000,0,imported from Options sheet (row 34),425.00
+Closed,,TSLL,Sell,Put,16.0,2026-05-29,2026-05-29,30,0.2033,0.0000,0,imported from Options sheet (row 35),610.00
+Closed,,TSM,Sell,Call,435.0,2026-05-29,2026-06-05,1,2.32,0.0000,0,imported from Options sheet (row 36),232.00
+Closed,,NVDA,Sell,Call,222.5,2026-06-01,2026-06-01,10,0.593,0.0000,0,imported from Options sheet (row 37),593.00
+Closed,,RDW,Sell,Put,18.0,2026-06-01,2026-06-05,30,0.4233,0.0767,0,imported from Options sheet (row 38),1040.00
+Closed,,NVDA,Sell,Call,230.0,2026-06-02,2026-06-05,10,0.777,0.0000,0,imported from Options sheet (row 39),777.00
+Closed,,TSLL,Sell,Call,16.5,2026-06-02,2026-06-05,30,0.1033,0.0000,0,imported from Options sheet (row 40),310.00
+Closed,,NOW,Sell,Put,118.0,2026-06-02,2026-06-05,10,1.263,0.0000,0,imported from Options sheet (row 41),1263.00
+Closed,,CLSK,Sell,Put,16.5,2026-06-03,2026-06-05,30,0.1533,0.0000,0,imported from Options sheet (row 42),460.00
+Closed,,IREN,Sell,Put,62.0,2026-06-03,2026-06-05,20,0.543,0.0000,0,imported from Options sheet (row 43),1086.00
+Closed,,TSLL,Sell,Put,14.0,2026-06-03,2026-06-05,10,0.123,0.0000,0,imported from Options sheet (row 44),123.00
+Closed,,AMD,Sell,Call,555.0,2026-06-03,2026-06-05,1,6.2,0.0000,0,imported from Options sheet (row 45),620.00
+Closed,,AAPL,Sell,Call,317.5,2026-06-03,2026-06-08,3,1.61,0.0000,0,imported from Options sheet (row 46),483.00
+Closed,,TSLL,Sell,Call,16.0,2026-06-05,2026-06-05,105,0.08,0.0000,0,imported from Options sheet (row 47),840.00
+Closed,,TSLA,Sell,Call,395.0,2026-06-05,2026-06-12,5,1.536,0.0000,0,imported from Options sheet (row 48),768.00
+Closed,,TSLA,Sell,Call,430.0,2026-06-05,2026-06-12,5,1.346,0.0000,0,imported from Options sheet (row 49),673.00
+Closed,,TSLL,Sell,Put,12.5,2026-06-16,2026-06-18,200,0.1234,0.0000,0,imported from Options sheet (row 50),2467.00
+Closed,,SPCH,Sell,Put,20.0,2026-06-16,2026-06-18,24,0.9433,0.0000,0,imported from Options sheet (row 51),2264.00
+Closed,IRA,SPCH,Sell,Call,21.0,2026-06-22,2026-07-17,24,1.3933,0.1367,0,[IRA] imported from Options sheet (row 52),3016.00
+Closed,IRA,SPCH,Sell,Put,10.0,2026-06-22,2026-07-17,100,0.5433,0.0000,0,[IRA] imported from Options sheet (row 53),5433.00
+Closed,IRA,TSLL,Sell,Put,10.0,2026-06-24,2026-07-10,130,0.2033,0.0101,0,[IRA] imported from Options sheet (row 54),2512.00
+Closed,IRA,TSLL,Sell,Put,11.5,2026-07-07,2026-07-17,46,0.2435,0.0000,0,[IRA] imported from Options sheet (row 55),1120.00
+Closed,IRA,SPCH,Sell,Put,10.0,2026-07-07,2026-07-17,60,0.3933,0.0000,0,[IRA] imported from Options sheet (row 56),2360.00
+Closed,ROTH,SPCH,Sell,Put,10.0,2026-07-07,2026-07-17,100,0.3933,0.0000,0,[ROTH] imported from Options sheet (row 57),3933.00
+Closed,HSA,SPCH,Sell,Put,4.5,2026-07-27,2026-08-21,20,0.573,0.0000,0,[HSA] imported from Options sheet (row 58),1146.00
+Closed,IRA,SPCH,Sell,Call,11.5,2026-07-27,2026-08-21,100,0.4093,0.0000,0,[IRA] imported from Options sheet (row 59),4093.00
+Closed,IRA,SPCH,Sell,Call,11.5,2026-07-28,2026-08-14,50,0.55,0.0000,0,[IRA] imported from Options sheet (row 60),2750.00
+Closed,IRA,TSLL,Sell,Call,7.5,2026-07-30,2026-07-31,300,0.0333,0.0000,0,[IRA] imported from Options sheet (row 61),1000.00
+Closed,IRA,AMD,Sell,Put,430.0,2026-07-31,2026-08-14,1,11.5,0.0300,0,[IRA] imported from Options sheet (row 62),1147.00
+Closed,IRA,AMD,Sell,Call,560.0,2026-08-04,2026-08-05,1,7.07,0.0000,0,[IRA] imported from Options sheet (row 63),707.00
+Closed,IRA,SPCH,Sell,Call,11.0,2026-08-04,2026-08-07,90,0.35,0.0000,0,[IRA] imported from Options sheet (row 64),3150.00
+Closed,IRA,NVDA,Sell,Call,215.0,2026-08-04,2026-08-05,11,0.75,0.0000,0,[IRA] imported from Options sheet (row 65),825.00
+Closed,IRA,NVDA,Sell,Call,220.0,2026-08-05,2026-08-19,11,0.6864,0.0000,0,[IRA] imported from Options sheet (row 66),755.00
+Closed,IRA,SPCH,Sell,Put,7.0,2026-08-14,2026-08-28,30,0.2,0.0000,0,[IRA] imported from Options sheet (row 67),600.00
+Closed,IRA,MRVL,Sell,Put,205.0,2026-08-18,2026-08-28,1,9.55,0.0000,0,[IRA] imported from Options sheet (row 68),955.00
+Closed,IRA,NVDA,Sell,Call,227.5,2026-08-18,2026-08-28,11,2.3664,0.0000,0,[IRA] imported from Options sheet (row 69),2603.00
+Closed,IRA,TSLL,Sell,Call,9.5,2026-08-19,2026-08-21,100,0.1,0.0000,0,[IRA] imported from Options sheet (row 70),1000.00
+Closed,CASH,SPCH,Sell,Put,7.0,2026-08-20,2026-09-04,20,0.35,0.0000,0,[CASH] imported from Options sheet (row 71),700.00
+Closed,IRA,TSLL,Sell,Call,10.0,2026-08-21,2026-09-04,100,0.2167,0.0000,0,[IRA] imported from Options sheet (row 72),2167.00
+Closed,IRA,BITX,Sell,Call,20.0,2026-08-21,2026-09-18,10,0.7,0.0000,0,[IRA] imported from Options sheet (row 73),700.00
+Closed,HSA,TSLL,Sell,Put,8.0,2026-08-26,2026-09-18,13,0.3231,0.0500,0,[HSA] imported from Options sheet (row 74),355.00
+Closed,IRA,NVDA,Sell,Call,230.0,2026-08-27,2026-09-11,11,2.5864,0.0664,0,[IRA] imported from Options sheet (row 75),2772.00
+Closed,IRA,TSLL,Sell,Call,9.5,2026-08-27,2026-08-28,200,0.0933,0.0000,0,[IRA] imported from Options sheet (row 76),1866.00
+Closed,IRA,TSLL,Sell,Call,10.5,2026-08-31,2026-09-04,100,0.17,0.0000,0,[IRA] imported from Options sheet (row 77),1700.00
+Closed,IRA,SPCH,Sell,Call,11.0,2026-08-31,2026-09-11,100,0.16,0.0000,0,[IRA] imported from Options sheet (row 78),1600.00
+Closed,IRA,TSLL,Sell,Put,8.5,2026-09-01,2026-09-11,70,0.14,0.0000,0,[IRA] imported from Options sheet (row 79),980.00
+Closed,IRA,MSTR,Sell,Put,123.0,2026-09-01,2026-09-04,1,2.35,0.0000,0,[IRA] imported from Options sheet (row 80),235.00
+Closed,ROTH,AMD,Sell,Call,517.5,2026-09-08,2026-09-11,1,8.4,0.0000,0,[ROTH] imported from Options sheet (row 81),840.00
+Closed,IRA,TSLL,Sell,Call,10.5,2026-09-08,2026-09-11,100,0.11,0.0000,0,[IRA] imported from Options sheet (row 82),1100.00
+Closed,IRA,SPCH,Sell,Call,11.5,2026-09-08,2026-09-11,100,0.22,0.0000,0,[IRA] imported from Options sheet (row 83),2200.00
+Closed,ROTH,TSLL,Sell,Call,10.5,2026-09-08,2026-09-11,59,0.14,0.0000,0,[ROTH] imported from Options sheet (row 84),826.00
+Closed,ROTH,SPCH,Sell,Call,11.5,2026-09-08,2026-09-11,60,0.25,0.0000,0,[ROTH] imported from Options sheet (row 85),1500.00
+Closed,IRA,TSLA,Sell,Call,385.0,2026-09-08,2026-09-14,5,1.9,0.0000,0,[IRA] imported from Options sheet (row 86),950.00
+Closed,IRA,TSLA,Sell,Call,390.0,2026-09-08,2026-09-18,5,3.3,0.0000,0,[IRA] imported from Options sheet (row 87),1650.00
+Closed,IRA,MSTR,Sell,Put,136.0,2026-09-08,2026-10-02,1,10.0,0.6900,0,[IRA] imported from Options sheet (row 88),931.00
+Closed,ROTH,AMD,Sell,Call,530.0,2026-09-09,2026-09-18,1,2.3,0.0000,0,[ROTH] imported from Options sheet (row 89),230.00
+Closed,IRA,MRVL,Sell,Put,217.5,2026-09-14,2026-09-18,1,4.9,0.0000,0,[IRA] imported from Options sheet (row 90),490.00
+Closed,IRA,AMD,Sell,Call,520.0,2026-09-15,2026-09-16,3,2.8,0.0000,0,[IRA] imported from Options sheet (row 91),840.00
+Open,IRA,NVDA,Sell,Call,222.5,2026-09-16,2026-09-25,5,1.8,,0,[IRA] imported from Options sheet (row 92),
+Closed,IRA,SPCH,Sell,Call,11.0,2026-09-16,2026-09-18,100,0.14,0.0000,0,[IRA] imported from Options sheet (row 93),1400.00
+Closed,IRA,AMD,Sell,Call,530.0,2026-09-16,2026-09-18,3,1.5867,0.0000,0,[IRA] imported from Options sheet (row 94),476.00
+Closed,IRA,TSLL,Sell,Call,10.0,2026-09-16,2026-09-18,100,0.16,0.0000,0,[IRA] imported from Options sheet (row 95),1600.00
+Closed,IRA,TSLL,Sell,Call,10.5,2026-09-17,2026-09-18,100,0.1,0.0000,0,[IRA] imported from Options sheet (row 96),1000.00
+Open,IRA,NVDA,Sell,Call,222.5,2026-09-17,2026-09-21,6,1.4,,0,[IRA] imported from Options sheet (row 97),
+Open,ROTH,AMD,Sell,Call,550.0,2026-09-18,2026-09-30,6,0.1983,,0,[ROTH] imported from Options sheet (row 98),
+Open,IRA,AMD,Sell,Call,550.0,2026-09-18,2026-09-30,6,0.5933,,0,[IRA] imported from Options sheet (row 99),
+Open,IRA,NVDA,Buy,Call,335.0,2026-09-21,2026-10-02,6,1.0033,,0,[IRA] imported from Options sheet (row 100),
+Open,IRA,TSLA,Sell,Call,400.0,2026-09-21,2026-09-30,5,2.28,,0,[IRA] imported from Options sheet (row 101),
+Open,IRA,TSLL,Sell,Call,11.0,2026-09-21,2026-09-30,100,0.0922,,0,[IRA] imported from Options sheet (row 102),
+Open,CASH,SPCH,Sell,Put,8.5,2026-09-21,2026-10-16,18,0.3,,0,[CASH] imported from Options sheet (row 103),
