@@ -11,8 +11,8 @@ Bottom navigation: **Home**, **Positions**, **History**, **Settings**.
 - Add an open position: ticker, buy or sell, call or put, strike, expiration, contracts, premium per share, optional fees, notes, and the date you opened it.
 - Edit an open position, or delete it.
 - Close a position with an exit date, exit premium, and optional fees. The app computes realized P/L and moves the trade to History.
-- Home summarizes open premium cash flow, contract counts, realized P/L for the current month, and recent activity.
-- History lists closed trades by month and can filter by ticker. Closed trades are read-only.
+- Home summarizes open premium cash flow, contract counts, realized P/L for the current month, realized P/L for the selected calendar year, and recent activity.
+- History lists closed trades by month, shows that year's total, and can filter by ticker. Closed trades are read-only. Home and History share the year. Chips appear when closed trades span more than the current year.
 - Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. Remove ads and export are placeholders.
 
 Home and History show a banner **advertisement placeholder**. No AdMob app id or ad unit id is in this project.
@@ -58,9 +58,11 @@ Examples:
 
 A $0 exit premium is allowed, for a contract that expired worthless. Realized P/L for the current month uses the exit date.
 
+**YTD** is the sum of realized P/L for closed trades whose close date falls in the selected calendar year, from January 1 through December 31. The default year is the current year. A prior year can be chosen when the log spans more than one year. Open positions are not included. The same figure is the **Year total** at the top of History for that year, and the ticker filter narrows it. An imported close date is the expiration date, so a closed trade dated later this year is included in that year's total.
+
 ### Spreadsheet realized P/L
 
-A closed CSV row may include `realizedOverride`, a dollar profit or loss from the sheet. When that cell has a number, including zero or a loss, the app stores it and **shows that amount** everywhere realized P/L appears (the trade, History month totals, and Home). Entry premium, exit premium, and fees are still saved, but they are not used for that displayed result.
+A closed CSV row may include `realizedOverride`, a dollar profit or loss from the sheet. When that cell has a number, including zero or a loss, the app stores it and **shows that amount** everywhere realized P/L appears: the trade, History month totals, the year total, and Home, including YTD. Entry premium, exit premium, and fees are still saved, but they are not used for that displayed result.
 
 If `realizedOverride` is blank, realized P/L is calculated from premiums and fees as above. The sheet's single `fees` column is stored as the opening fee, and the exit fee is zero, so the fee is subtracted once.
 

@@ -9,6 +9,7 @@ import com.optiontracker.app.data.PositionRepository
 import com.optiontracker.app.data.SettingsRepository
 import androidx.room.withTransaction
 import com.optiontracker.app.data.local.OptionDatabase
+import com.optiontracker.app.ui.ReportYearStore
 import com.optiontracker.app.ui.close.ClosePositionViewModel
 import com.optiontracker.app.ui.detail.PositionDetailViewModel
 import com.optiontracker.app.ui.editor.PositionEditorViewModel
@@ -24,11 +25,12 @@ class AppContainer(context: Context) {
         transact = { block -> database.withTransaction { block() } },
     )
     val settingsRepository = SettingsRepository(context)
+    private val reportYear = ReportYearStore()
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
-        initializer { DashboardViewModel(repository) }
+        initializer { DashboardViewModel(repository, reportYear) }
         initializer { PositionsViewModel(repository) }
-        initializer { HistoryViewModel(repository) }
+        initializer { HistoryViewModel(repository, reportYear) }
         initializer { SettingsViewModel(settingsRepository, repository) }
         initializer { PositionDetailViewModel(repository, createSavedStateHandle()) }
         initializer { PositionEditorViewModel(repository, createSavedStateHandle()) }

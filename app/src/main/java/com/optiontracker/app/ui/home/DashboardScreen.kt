@@ -29,9 +29,11 @@ import com.optiontracker.app.domain.money.Money
 import com.optiontracker.app.domain.pnl.ActivityKind
 import com.optiontracker.app.domain.pnl.RecentActivity
 import com.optiontracker.app.domain.pnl.realizedPnlCents
+import com.optiontracker.app.domain.pnl.ytdLabel
 import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.TrackerScaffold
+import com.optiontracker.app.ui.components.YearSelector
 import com.optiontracker.app.ui.format.contractsLabel
 import com.optiontracker.app.ui.format.formatDate
 import com.optiontracker.app.ui.format.pnlColor
@@ -59,6 +61,7 @@ fun DashboardRoute(
                 onOpenHistory(activity.position.id)
             }
         },
+        onSelectYear = viewModel::selectYear,
     )
 }
 
@@ -68,6 +71,7 @@ fun DashboardScreen(
     onNavigate: (String) -> Unit,
     onAdd: () -> Unit,
     onOpenActivity: (RecentActivity) -> Unit,
+    onSelectYear: (Int) -> Unit = {},
 ) {
     TrackerScaffold(
         title = "Home",
@@ -92,7 +96,7 @@ fun DashboardScreen(
                     CircularProgressIndicator()
                 }
             }
-            is DashboardUiState.Ready -> DashboardContent(padding, state, onOpenActivity)
+            is DashboardUiState.Ready -> DashboardContent(padding, state, onOpenActivity, onSelectYear)
         }
     }
 }
@@ -102,6 +106,7 @@ private fun DashboardContent(
     padding: PaddingValues,
     state: DashboardUiState.Ready,
     onOpenActivity: (RecentActivity) -> Unit,
+    onSelectYear: (Int) -> Unit,
 ) {
     val summary = state.summary
     ScreenColumn(padding) {
@@ -137,6 +142,35 @@ private fun DashboardContent(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard("Long", summary.longContracts.toString(), Modifier.weight(1f))
                 StatCard("Short", summary.shortContracts.toString(), Modifier.weight(1f))
+            }
+            YearSelector(
+                years = summary.availableYears,
+                selectedYear = summary.selectedYear,
+                onSelect = onSelectYear,
+            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("YTD realized P/L", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        Money.formatSigned(summary.realizedYearCents),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = pnlColor(summary.realizedYearCents),
+                    )
+                    Text(
+                        ytdLabel(summary.selectedYear),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        if (summary.closedYearCount == 1) {
+                            "1 closed trade"
+                        } else {
+                            "${summary.closedYearCount} closed trades"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

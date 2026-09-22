@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.optiontracker.app.data.PositionRepository
 import com.optiontracker.app.domain.pnl.DashboardSummary
 import com.optiontracker.app.domain.pnl.buildDashboardSummary
+import com.optiontracker.app.ui.ReportYearStore
 import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,15 +19,23 @@ sealed interface DashboardUiState {
 
 class DashboardViewModel(
     repository: PositionRepository,
+    private val reportYear: ReportYearStore,
 ) : ViewModel() {
     val uiState: StateFlow<DashboardUiState> = combine(
         repository.observeOpenPositions(),
         repository.observeClosedPositions(),
-    ) { open, closed ->
-        DashboardUiState.Ready(buildDashboardSummary(open, closed, LocalDate.now()))
+        reportYear.year,
+    ) { open, closed, year ->
+        DashboardUiState.Ready(
+            buildDashboardSummary(open, closed, LocalDate.now(), selectedYear = year),
+        )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         DashboardUiState.Loading,
     )
+
+    fun selectYear(year: Int) {
+        reportYear.select(year)
+    }
 }

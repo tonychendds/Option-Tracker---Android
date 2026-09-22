@@ -54,6 +54,71 @@ class DashboardAndHistoryTest {
         assertEquals("AAPL", groups.single().trades.single().ticker)
     }
 
+    @Test
+    fun ytdSumsClosedTradesAcrossMonthsAndSkipsOtherYears() {
+        val openWithCloseDate = longCall().copy(
+            closedOn = LocalDate.of(2026, 3, 1),
+            realizedOverrideCents = 9_900L,
+        )
+        val januaryOverride = closedThisMonth().copy(
+            id = 5,
+            ticker = "MSFT",
+            closedOn = LocalDate.of(2026, 1, 15),
+            realizedOverrideCents = 100L,
+        )
+        val december = closedLastMonth().copy(
+            id = 6,
+            closedOn = LocalDate.of(2026, 12, 18),
+            realizedOverrideCents = -2_000L,
+        )
+        val priorYear = closedThisMonth().copy(
+            id = 7,
+            ticker = "IWM",
+            closedOn = LocalDate.of(2025, 11, 3),
+            realizedOverrideCents = 5_000L,
+        )
+        val closed = listOf(closedThisMonth(), closedLastMonth(), januaryOverride, december, priorYear)
+        val summary = buildDashboardSummary(
+            open = listOf(openWithCloseDate),
+            closed = closed,
+            today = today,
+            selectedYear = 2026,
+        )
+
+        // September buy $148, August sell $60, January override $1, December override −$20.
+        assertEquals(14_800L + 6_000L + 100L + (-2_000L), summary.realizedYearCents)
+        assertEquals(4, summary.closedYearCount)
+        assertEquals(14_800L, summary.realizedThisMonthCents)
+        assertEquals(1, summary.closedThisMonthCount)
+        assertEquals(listOf(2026, 2025), summary.availableYears)
+        assertEquals("2026 YTD", ytdLabel(summary.selectedYear))
+
+        val prior = realizedYearTotal(closed + openWithCloseDate, 2025)
+        assertEquals(5_000L, prior.totalCents)
+        assertEquals(1, prior.tradeCount)
+
+        val openOnly = realizedYearTotal(listOf(openWithCloseDate), 2026)
+        assertEquals(0L, openOnly.totalCents)
+        assertEquals(0, openOnly.tradeCount)
+    }
+
+    @Test
+    fun historyYearTotalMatchesTheMonthsInThatYear() {
+        val priorYear = closedThisMonth().copy(
+            id = 7,
+            ticker = "IWM",
+            closedOn = LocalDate.of(2025, 11, 3),
+            realizedOverrideCents = 5_000L,
+        )
+        val closed = listOf(closedThisMonth(), closedLastMonth(), priorYear)
+        val months = groupClosedTrades(closed, "").filter { it.yearMonth.year == 2026 }
+        val total = realizedYearTotal(closed, 2026)
+        assertEquals(2, months.size)
+        assertEquals(total.totalCents, months.sumOf { it.totalPnlCents })
+        assertEquals(14_800L + 6_000L, total.totalCents)
+        assertEquals(5_000L, realizedYearTotal(closed, 2025).totalCents)
+    }
+
     private fun longCall() = position(
         id = 1,
         ticker = "AAPL",

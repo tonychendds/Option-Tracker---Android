@@ -27,7 +27,9 @@ import com.optiontracker.app.domain.pnl.realizedPnlCents
 import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.StatusChip
+import com.optiontracker.app.domain.pnl.ytdLabel
 import com.optiontracker.app.ui.components.TrackerScaffold
+import com.optiontracker.app.ui.components.YearSelector
 import com.optiontracker.app.ui.format.formatDate
 import com.optiontracker.app.ui.format.formatMonth
 import com.optiontracker.app.ui.format.pnlColor
@@ -43,13 +45,14 @@ fun HistoryRoute(
     onOpen: (Long) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryScreen(state, viewModel::onQuery, onNavigate, onOpen)
+    HistoryScreen(state, viewModel::onQuery, viewModel::selectYear, onNavigate, onOpen)
 }
 
 @Composable
 fun HistoryScreen(
     state: HistoryUiState,
     onQuery: (String) -> Unit,
+    onSelectYear: (Int) -> Unit,
     onNavigate: (String) -> Unit,
     onOpen: (Long) -> Unit,
 ) {
@@ -66,7 +69,7 @@ fun HistoryScreen(
                     body = "When you close a position, the realized profit or loss is listed here by month.",
                 )
             } else {
-                HistoryList(state, onQuery, onOpen)
+                HistoryList(state, onQuery, onSelectYear, onOpen)
             }
         }
     }
@@ -76,6 +79,7 @@ fun HistoryScreen(
 private fun HistoryList(
     state: HistoryUiState,
     onQuery: (String) -> Unit,
+    onSelectYear: (Int) -> Unit,
     onOpen: (Long) -> Unit,
 ) {
     LazyColumn(
@@ -94,11 +98,59 @@ private fun HistoryList(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             )
         }
+        item {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                YearSelector(
+                    years = state.availableYears,
+                    selectedYear = state.selectedYear,
+                    onSelect = onSelectYear,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Year total", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            ytdLabel(state.selectedYear),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text(
+                        Money.formatSigned(state.yearTotalCents),
+                        color = pnlColor(state.yearTotalCents),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                }
+                Text(
+                    if (state.yearTradeCount == 1) {
+                        "1 closed trade"
+                    } else {
+                        "${state.yearTradeCount} closed trades"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         if (state.months.isEmpty()) {
             item {
                 EmptyState(
-                    title = "No matching trades",
-                    body = "No closed trades use that ticker.",
+                    title = if (state.query.isBlank()) {
+                        "No closed trades in ${state.selectedYear}"
+                    } else {
+                        "No matching trades"
+                    },
+                    body = if (state.query.isBlank()) {
+                        "Closed trades from other years stay on their own year."
+                    } else {
+                        "No closed trades use that ticker."
+                    },
                 )
             }
         }
