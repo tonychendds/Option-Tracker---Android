@@ -36,4 +36,12 @@ class FakePositionDao : PositionDao {
     override suspend fun deleteById(id: Long) {
         rows.value = rows.value.filterNot { it.id == id }
     }
+
+    override suspend fun deleteAll() {
+        rows.value = emptyList()
+    }
+
+    override suspend fun insertAll(entities: List<PositionEntity>) {
+        entities.forEach { insert(it) }
+    }
 }

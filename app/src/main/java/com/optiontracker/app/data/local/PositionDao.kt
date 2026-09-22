@@ -28,4 +28,10 @@ interface PositionDao {
 
     @Query("DELETE FROM positions WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM positions")
+    suspend fun deleteAll()
+
+    @Insert
+    suspend fun insertAll(entities: List<PositionEntity>)
 }

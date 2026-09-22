@@ -128,7 +128,16 @@ fun PositionRow(position: Position, onClick: () -> Unit) {
                 container = if (position.type == OptionType.CALL) ColorRole.PRIMARY else ColorRole.TERTIARY,
             )
             Text(
-                "${contractsLabel(position.contracts)} · ${Money.format(position.entryPremiumCents)} premium",
+                buildString {
+                    if (position.account.isNotBlank()) {
+                        append(position.account)
+                        append(" · ")
+                    }
+                    append(contractsLabel(position.contracts))
+                    append(" · ")
+                    append(Money.format(position.entryPremiumCents))
+                    append(" premium")
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

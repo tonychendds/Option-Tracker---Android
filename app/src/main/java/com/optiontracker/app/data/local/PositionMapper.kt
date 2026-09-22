@@ -24,6 +24,8 @@ fun PositionEntity.toDomain(): Position = Position(
     closedOn = exitEpochDay?.let(LocalDate::ofEpochDay),
     createdAtEpochMillis = createdAtEpochMillis,
     updatedAtEpochMillis = updatedAtEpochMillis,
+    account = account,
+    realizedOverrideCents = realizedOverrideCents,
 )
 
 fun Position.toEntity(): PositionEntity = PositionEntity(
@@ -44,4 +46,6 @@ fun Position.toEntity(): PositionEntity = PositionEntity(
     exitEpochDay = closedOn?.toEpochDay(),
     createdAtEpochMillis = createdAtEpochMillis,
     updatedAtEpochMillis = updatedAtEpochMillis,
+    account = account,
+    realizedOverrideCents = realizedOverrideCents,
 )

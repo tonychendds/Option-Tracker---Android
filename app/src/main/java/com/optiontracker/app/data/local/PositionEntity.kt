@@ -22,4 +22,6 @@ data class PositionEntity(
     val exitEpochDay: Long?,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
+    val account: String = "",
+    val realizedOverrideCents: Long? = null,
 )

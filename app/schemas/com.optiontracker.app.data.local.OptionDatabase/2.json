@@ -1,0 +1,135 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "1551ea8db08653f9f59b3da03035d67b",
+    "entities": [
+      {
+        "tableName": "positions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `ticker` TEXT NOT NULL, `side` TEXT NOT NULL, `optionType` TEXT NOT NULL, `strikeCents` INTEGER NOT NULL, `expiryEpochDay` INTEGER NOT NULL, `contracts` INTEGER NOT NULL, `entryPremiumCents` INTEGER NOT NULL, `entryFeesCents` INTEGER NOT NULL, `openedEpochDay` INTEGER NOT NULL, `notes` TEXT NOT NULL, `status` TEXT NOT NULL, `exitPremiumCents` INTEGER, `exitFeesCents` INTEGER, `exitEpochDay` INTEGER, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `account` TEXT NOT NULL, `realizedOverrideCents` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ticker",
+            "columnName": "ticker",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "side",
+            "columnName": "side",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "optionType",
+            "columnName": "optionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "strikeCents",
+            "columnName": "strikeCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiryEpochDay",
+            "columnName": "expiryEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contracts",
+            "columnName": "contracts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryPremiumCents",
+            "columnName": "entryPremiumCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryFeesCents",
+            "columnName": "entryFeesCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "openedEpochDay",
+            "columnName": "openedEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exitPremiumCents",
+            "columnName": "exitPremiumCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "exitFeesCents",
+            "columnName": "exitFeesCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "exitEpochDay",
+            "columnName": "exitEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAtEpochMillis",
+            "columnName": "createdAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "account",
+            "columnName": "account",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "realizedOverrideCents",
+            "columnName": "realizedOverrideCents",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1551ea8db08653f9f59b3da03035d67b')"
+    ]
+  }
+}

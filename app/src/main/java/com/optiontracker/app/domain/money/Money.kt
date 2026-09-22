@@ -15,6 +15,31 @@ object Money {
             .replace(",", "")
             .replace(" ", "")
         if (!amountPattern.matches(cleaned)) return null
+        return centsFromDecimal(cleaned)
+    }
+
+    /** Dollars that may be negative, including a leading minus or accounting parentheses. */
+    fun parseSignedCents(raw: String): Long? {
+        var cleaned = raw.trim()
+            .replace("$", "")
+            .replace(",", "")
+            .replace(" ", "")
+        if (cleaned.isEmpty()) return null
+        var negative = false
+        if (cleaned.startsWith("+")) cleaned = cleaned.substring(1)
+        if (cleaned.startsWith("-")) {
+            negative = true
+            cleaned = cleaned.substring(1)
+        } else if (cleaned.startsWith("(") && cleaned.endsWith(")") && cleaned.length > 2) {
+            negative = true
+            cleaned = cleaned.substring(1, cleaned.length - 1)
+        }
+        val cents = parseCents(cleaned) ?: return null
+        return if (negative) -cents else cents
+    }
+
+    private fun centsFromDecimal(cleaned: String): Long? {
+        if (!amountPattern.matches(cleaned)) return null
         return try {
             val cents = BigDecimal(cleaned)
                 .setScale(2, RoundingMode.UNNECESSARY)

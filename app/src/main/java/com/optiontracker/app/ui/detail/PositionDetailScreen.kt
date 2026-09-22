@@ -140,7 +140,11 @@ private fun PositionBody(
                 color = pnlColor(pnl),
             )
             Text(
-                "Entry versus exit premium, times contracts, times 100, minus fees.",
+                if (position.realizedOverrideCents != null) {
+                    "Taken from the spreadsheet realized P/L. Entry and exit premiums are kept, but they are not used for this result."
+                } else {
+                    "Entry versus exit premium, times contracts, times 100, minus fees."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -158,6 +162,9 @@ private fun PositionBody(
             )
         }
         DetailRow("Status", if (open) "Open" else "Closed")
+        if (position.account.isNotBlank()) {
+            DetailRow("Account", position.account)
+        }
         DetailRow("Type", typeLabel(position.type))
         DetailRow("Side", sideLabel(position.side))
         DetailRow("Strike", Money.format(position.strikeCents))
@@ -170,7 +177,10 @@ private fun PositionBody(
         DetailRow("Opened", formatDate(position.openedOn))
         if (!open) {
             DetailRow("Closed", position.closedOn?.let(::formatDate) ?: "—")
-            DetailRow("Exit premium per share", Money.format(position.exitPremiumCents ?: 0L))
+            DetailRow(
+                "Exit premium per share",
+                position.exitPremiumCents?.let(Money::format) ?: "—",
+            )
             DetailRow("Exit fees", Money.format(position.exitFeesCents ?: 0L))
             DetailRow("Exit notional", Money.format(position.exitNotionalCents() ?: 0L))
         }

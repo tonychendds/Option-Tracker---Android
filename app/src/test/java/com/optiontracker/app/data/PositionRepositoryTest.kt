@@ -1,5 +1,6 @@
 package com.optiontracker.app.data
 
+import com.optiontracker.app.domain.csv.CsvTradeParser
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
@@ -69,6 +70,24 @@ class PositionRepositoryTest {
         assertEquals(LocalDate.of(2026, 9, 10), closed.closedOn)
         assertEquals(14_800L, closed.realizedPnlCents())
         assertEquals(CloseOutcome.NotOpen, repo.closePosition(id, 100, 0, LocalDate.of(2026, 9, 11)))
+    }
+
+    @Test
+    fun replaceAllRemovesPreviousTrades() = runBlocking {
+        repo.save(draft(ticker = "OLD"))
+        val imported = CsvTradeParser.parse(
+            """
+            status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+            Open,CASH,SPY,Sell,Put,500,2026-09-01,2026-10-16,1,1.00,,,
+            Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-10,1,2.50,4.00,1.00,,148
+            """.trimIndent(),
+        ).positions
+        repo.replaceAll(imported)
+        assertEquals(listOf("SPY"), repo.observeOpenPositions().first().map { it.ticker })
+        val closed = repo.observeClosedPositions().first().single()
+        assertEquals("IRA", closed.account)
+        assertEquals(14_800L, closed.realizedPnlCents())
+        assertTrue(repo.observeOpenPositions().first().none { it.ticker == "OLD" })
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.optiontracker.app.domain.pnl
 
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.Position
+import com.optiontracker.app.domain.model.PositionStatus
 
 /**
  * Equity-option profit and loss.
@@ -83,6 +84,8 @@ fun Position.exitNotionalCents(): Long? {
 }
 
 fun Position.realizedPnlCents(): Long? {
+    if (status != PositionStatus.CLOSED) return null
+    realizedOverrideCents?.let { return it }
     val exitPremium = exitPremiumCents ?: return null
     val exitFees = exitFeesCents ?: 0L
     return OptionPnl.realizedPnlCents(

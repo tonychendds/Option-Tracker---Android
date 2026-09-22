@@ -21,6 +21,7 @@ object PositionValidator {
     val tickerPattern = Regex("^[A-Z][A-Z0-9.\\-]{0,9}$")
     const val MAX_CONTRACTS = 100_000
     const val MAX_NOTES = 2_000
+    const val MAX_ACCOUNT = 64
 
     fun validateEntry(
         ticker: String,
@@ -97,6 +98,9 @@ object PositionValidator {
         }
         if (position.entryFeesCents < 0L || position.entryFeesCents > Money.MAX_CENTS) return "Invalid fees"
         if (position.notes.length > MAX_NOTES) return "Notes are too long"
+        if (position.account.length > MAX_ACCOUNT || position.account.any { it.isISOControl() }) {
+            return "Invalid account"
+        }
         val exitPremium = position.exitPremiumCents
         if (exitPremium != null && (exitPremium < 0L || exitPremium > Money.MAX_CENTS)) {
             return "Invalid exit premium"

@@ -34,6 +34,8 @@ data class EditorUiState(
     val fees: String = "",
     val openedOn: LocalDate = LocalDate.now(),
     val notes: String = "",
+    val account: String = "",
+    val realizedOverrideCents: Long? = null,
     val errors: Map<String, String> = emptyMap(),
     val saving: Boolean = false,
 )
@@ -122,6 +124,8 @@ class PositionEditorViewModel(
                     closedOn = null,
                     createdAtEpochMillis = 0L,
                     updatedAtEpochMillis = 0L,
+                    account = current.account,
+                    realizedOverrideCents = current.realizedOverrideCents,
                 ),
             )
             _events.emit(EditorEvent.Saved)
@@ -148,6 +152,8 @@ class PositionEditorViewModel(
         fees = if (position.entryFeesCents == 0L) "" else Money.toInput(position.entryFeesCents),
         openedOn = position.openedOn,
         notes = position.notes,
+        account = position.account,
+        realizedOverrideCents = position.realizedOverrideCents,
         errors = emptyMap(),
         saving = false,
     )

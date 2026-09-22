@@ -20,6 +20,7 @@ sealed interface CloseOutcome {
 class PositionRepository(
     private val dao: PositionDao,
     private val nowMillis: () -> Long = { System.currentTimeMillis() },
+    private val transact: suspend (suspend () -> Unit) -> Unit = { block -> block() },
 ) {
     fun observeOpenPositions(): Flow<List<Position>> =
         dao.observeOpen().map { rows ->
@@ -105,5 +106,26 @@ class PositionRepository(
 
     suspend fun delete(id: Long) {
         dao.deleteById(id)
+    }
+
+    suspend fun replaceAll(positions: List<Position>) {
+        val now = nowMillis()
+        val entities = positions.map { position ->
+            val normalized = position.copy(
+                id = 0L,
+                ticker = position.ticker.trim().uppercase(Locale.US),
+                account = position.account.trim(),
+                notes = position.notes.trim(),
+                createdAtEpochMillis = now,
+                updatedAtEpochMillis = now,
+            )
+            val error = PositionValidator.modelError(normalized)
+            if (error != null) throw IllegalArgumentException(error)
+            normalized.toEntity()
+        }
+        transact {
+            dao.deleteAll()
+            if (entities.isNotEmpty()) dao.insertAll(entities)
+        }
     }
 }

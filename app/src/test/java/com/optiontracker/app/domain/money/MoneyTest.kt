@@ -25,6 +25,16 @@ class MoneyTest {
     }
 
     @Test
+    fun parsesSignedDollars() {
+        assertEquals(14_800L, Money.parseSignedCents("148.00"))
+        assertEquals(14_800L, Money.parseSignedCents("+$148"))
+        assertEquals(-5_000L, Money.parseSignedCents("-50"))
+        assertEquals(-1_250L, Money.parseSignedCents("($12.50)"))
+        assertNull(Money.parseSignedCents(""))
+        assertNull(Money.parseSignedCents("nope"))
+    }
+
+    @Test
     fun formatsUsd() {
         assertEquals("$2.50", Money.format(250))
         assertEquals("-$1.30", Money.format(-130))

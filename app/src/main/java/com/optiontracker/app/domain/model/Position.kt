@@ -41,4 +41,6 @@ data class Position(
     val closedOn: LocalDate?,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
+    val account: String = "",
+    val realizedOverrideCents: Long? = null,
 )

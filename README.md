@@ -13,7 +13,7 @@ Bottom navigation: **Home**, **Positions**, **History**, **Settings**.
 - Close a position with an exit date, exit premium, and optional fees. The app computes realized P/L and moves the trade to History.
 - Home summarizes open premium cash flow, contract counts, realized P/L for the current month, and recent activity.
 - History lists closed trades by month and can filter by ticker. Closed trades are read-only.
-- Settings: light, dark, or system theme. Currency is US dollars. Remove ads and export are placeholders.
+- Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. Remove ads and export are placeholders.
 
 Home and History show a banner **advertisement placeholder**. No AdMob app id or ad unit id is in this project.
 
@@ -58,6 +58,14 @@ Examples:
 
 A $0 exit premium is allowed, for a contract that expired worthless. Realized P/L for the current month uses the exit date.
 
+### Spreadsheet realized P/L
+
+A closed CSV row may include `realizedOverride`, a dollar profit or loss from the sheet. When that cell has a number, including zero or a loss, the app stores it and **shows that amount** everywhere realized P/L appears (the trade, History month totals, and Home). Entry premium, exit premium, and fees are still saved, but they are not used for that displayed result.
+
+If `realizedOverride` is blank, realized P/L is calculated from premiums and fees as above. The sheet's single `fees` column is stored as the opening fee, and the exit fee is zero, so the fee is subtracted once.
+
+The sheet has no exit date. A closed import uses the expiration date as the close date, which is what History groups by.
+
 ## Open in Android Studio
 
 Use Android Studio with Android Gradle Plugin 9.4 (Quail 4 or newer) and JDK 17 or newer.
@@ -89,9 +97,43 @@ Unit tests for P/L math and position create, read, update, close, and delete:
 ./gradlew testDebugUnitTest
 ```
 
+## Import CSV
+
+Settings → **Import CSV** opens a file picker. The file stays on the device; nothing is uploaded. Confirming the import **replaces all local trades**. Rows that fail validation are skipped and counted. If the file has no usable rows, existing trades are left in place.
+
+The header row is required. Names are matched without regard to case:
+
+```text
+status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+```
+
+| Column | Values |
+| --- | --- |
+| status | `Open` or `Closed` |
+| account | Free text such as IRA, CASH, HSA, or ROTH. Shown on the position. |
+| ticker | Such as `AAPL` or `BRK.B` |
+| side | `Buy` or `Sell` |
+| right | `Call` or `Put` |
+| strike | Strike price in dollars |
+| openDate, expDate | `yyyy-MM-dd` |
+| contracts | Whole number of contracts |
+| entryPremium | Premium per share. Blank is not allowed. |
+| exitPremium | Premium per share. Blank is fine for an open trade. A closed trade needs this or `realizedOverride`. |
+| fees | Dollars, blank means 0 |
+| notes | Optional text. Quotes are allowed when the note contains a comma. |
+| realizedOverride | Optional dollar P/L for a closed trade. See above. |
+
+Example:
+
+```csv
+status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+Open,CASH,SPY,Sell,Put,500,2026-09-01,2026-10-16,2,3.00,,0.65,hedge,
+Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-18,1,2.50,4.00,1.00,"rolled, earnings",148.00
+```
+
 ## Data
 
-Positions live in a Room database on the device (`option_tracker.db`). There is no account and no network permission. Theme choice is stored in DataStore.
+Positions live in a Room database on the device (`option_tracker.db`). There is no login and no network permission. The account label from a CSV is stored with the trade. Theme choice is stored in DataStore.
 
 ## Ads and Play Billing later
 
@@ -99,6 +141,7 @@ This version does not ship the AdMob SDK or Google Play Billing.
 
 - Banner slots on Home and History are a labeled placeholder composable. Do not drop a real ad unit id into that composable without a privacy policy and the Play Console ad setup.
 - Settings has a disabled **Remove ads** action. A future build can add Play Billing as a one-time product and hide the placeholder when the purchase is owned. No product id is configured now.
+- **Import CSV** reads a local file through the system file picker. It does not use the network.
 - **Export trades** explains that export is not available and does not write a file.
 
 ## Out of scope for v1

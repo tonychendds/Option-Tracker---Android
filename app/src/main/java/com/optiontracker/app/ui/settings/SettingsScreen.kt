@@ -1,5 +1,8 @@
 package com.optiontracker.app.ui.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,13 +26,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.optiontracker.app.BuildConfig
 import com.optiontracker.app.data.ThemeMode
+import com.optiontracker.app.domain.csv.CsvImportResult
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.TrackerScaffold
 import com.optiontracker.app.ui.navigation.Routes
+import java.nio.charset.Charset
 
 @Composable
 fun SettingsRoute(
@@ -37,7 +43,28 @@ fun SettingsRoute(
     onNavigate: (String) -> Unit,
 ) {
     val theme by viewModel.themeMode.collectAsStateWithLifecycle()
-    SettingsScreen(theme, viewModel::setTheme, onNavigate)
+    val importing by viewModel.importing.collectAsStateWithLifecycle()
+    val importSummary by viewModel.importSummary.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        viewModel.importCsv {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                input.bufferedReader(Charset.forName("UTF-8")).readText()
+            } ?: error("Could not open that file")
+        }
+    }
+    SettingsScreen(
+        themeMode = theme,
+        onTheme = viewModel::setTheme,
+        onNavigate = onNavigate,
+        importing = importing,
+        importSummary = importSummary,
+        onPickCsv = {
+            picker.launch(arrayOf("text/*", "application/*", "*/*"))
+        },
+        onDismissImport = viewModel::dismissImportSummary,
+    )
 }
 
 @Composable
@@ -45,9 +72,14 @@ fun SettingsScreen(
     themeMode: ThemeMode,
     onTheme: (ThemeMode) -> Unit,
     onNavigate: (String) -> Unit,
+    importing: Boolean = false,
+    importSummary: CsvImportResult? = null,
+    onPickCsv: () -> Unit = {},
+    onDismissImport: () -> Unit = {},
 ) {
     var showRemoveAds by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
+    var showImportConfirm by remember { mutableStateOf(false) }
     TrackerScaffold(
         title = "Settings",
         currentRoute = Routes.SETTINGS,
@@ -104,6 +136,23 @@ fun SettingsScreen(
                         TextButton(onClick = { showRemoveAds = true }) { Text("Learn more") }
                     }
                 }
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Import CSV", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Load trades from a spreadsheet export. This replaces every trade stored on this phone.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Button(
+                            onClick = { showImportConfirm = true },
+                            enabled = !importing,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(if (importing) "Importing…" else "Import CSV")
+                        }
+                    }
+                }
                 OutlinedButton(onClick = { showExport = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Export trades")
                 }
@@ -138,6 +187,51 @@ fun SettingsScreen(
             },
         )
     }
+    if (showImportConfirm) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirm = false },
+            title = { Text("Replace all local trades?") },
+            text = {
+                Text(
+                    "This replaces all local trades with the rows in the file. Rows that cannot be read are skipped. If every row fails, your current trades stay.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showImportConfirm = false
+                        onPickCsv()
+                    },
+                ) { Text("Choose file") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirm = false }) { Text("Cancel") }
+            },
+        )
+    }
+    importSummary?.let { summary ->
+        AlertDialog(
+            onDismissRequest = onDismissImport,
+            title = { Text(if (summary.replacedExisting) "Import finished" else "Import did not change your trades") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(importSummaryText(summary))
+                    summary.errors.take(8).forEach { error ->
+                        Text(error, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (summary.errors.size > 8) {
+                        Text(
+                            "And ${summary.errors.size - 8} more.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismissImport) { Text("OK") }
+            },
+        )
+    }
     if (showExport) {
         AlertDialog(
             onDismissRequest = { showExport = false },
@@ -151,5 +245,15 @@ fun SettingsScreen(
                 TextButton(onClick = { showExport = false }) { Text("OK") }
             },
         )
+    }
+}
+
+private fun importSummaryText(summary: CsvImportResult): String {
+    summary.fileError?.let { return it }
+    val counts = "${summary.openCount} open, ${summary.closedCount} closed, ${summary.skippedCount} skipped."
+    return if (summary.replacedExisting) {
+        "Replaced local trades. $counts"
+    } else {
+        "Nothing was imported, so your existing trades were kept. $counts"
     }
 }
