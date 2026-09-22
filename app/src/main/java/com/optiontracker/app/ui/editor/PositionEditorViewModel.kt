@@ -9,7 +9,9 @@ import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
 import com.optiontracker.app.domain.money.Money
+import com.optiontracker.app.domain.ocr.BrokerParseResult
 import com.optiontracker.app.domain.validation.PositionValidator
+import com.optiontracker.app.ui.ocr.ScreenshotDraftStore
 import java.time.LocalDate
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,6 +40,8 @@ data class EditorUiState(
     val realizedOverrideCents: Long? = null,
     val errors: Map<String, String> = emptyMap(),
     val saving: Boolean = false,
+    val importMessage: String? = null,
+    val importFailed: Boolean = false,
 )
 
 sealed interface EditorEvent {
@@ -47,6 +51,7 @@ sealed interface EditorEvent {
 class PositionEditorViewModel(
     private val repository: PositionRepository,
     savedStateHandle: SavedStateHandle,
+    draftStore: ScreenshotDraftStore,
 ) : ViewModel() {
     private val positionId: Long? = savedStateHandle.get<Long>("positionId")?.takeIf { it > 0L }
 
@@ -67,6 +72,37 @@ class PositionEditorViewModel(
                     _state.update { it.copy(loading = false, missing = true) }
                 } else {
                     _state.update { it.from(position) }
+                }
+            }
+        } else {
+            draftStore.consume()?.let { applyImport(it) }
+        }
+    }
+
+    fun applyImport(result: BrokerParseResult) {
+        if (positionId != null) return
+        when (result) {
+            is BrokerParseResult.Failed -> _state.update {
+                it.copy(importMessage = result.message, importFailed = true)
+            }
+            is BrokerParseResult.Ready -> {
+                val draft = result.draft
+                _state.update {
+                    it.copy(
+                        ticker = draft.ticker,
+                        side = draft.side,
+                        type = draft.type,
+                        strike = draft.strikeText,
+                        expiry = draft.expiry,
+                        contracts = draft.contractsText,
+                        premium = draft.premiumText,
+                        fees = draft.feesText,
+                        openedOn = draft.openedOn,
+                        notes = draft.notes,
+                        importMessage = draft.summary,
+                        importFailed = false,
+                        errors = emptyMap(),
+                    )
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.optiontracker.app.ui.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -8,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.optiontracker.app.ui.ocr.ScreenshotDraftStore
 import com.optiontracker.app.ui.close.ClosePositionRoute
 import com.optiontracker.app.ui.close.ClosePositionViewModel
 import com.optiontracker.app.ui.detail.PositionDetailRoute
@@ -24,7 +26,11 @@ import com.optiontracker.app.ui.settings.SettingsRoute
 import com.optiontracker.app.ui.settings.SettingsViewModel
 
 @Composable
-fun OptionTrackerNavHost(factory: ViewModelProvider.Factory) {
+fun OptionTrackerNavHost(
+    factory: ViewModelProvider.Factory,
+    recognizeScreenshot: suspend (Uri) -> String,
+    screenshotDrafts: ScreenshotDraftStore,
+) {
     val navController = rememberNavController()
     val navigateTop: (String) -> Unit = { route ->
         navController.navigate(route) {
@@ -42,6 +48,11 @@ fun OptionTrackerNavHost(factory: ViewModelProvider.Factory) {
                 onAdd = { navController.navigate(Routes.editor()) },
                 onOpenPosition = { navController.navigate(Routes.detail(it)) },
                 onOpenHistory = { navController.navigate(Routes.historyDetail(it)) },
+                recognizeScreenshot = recognizeScreenshot,
+                onScreenshot = { result ->
+                    screenshotDrafts.offer(result)
+                    navController.navigate(Routes.editor())
+                },
             )
         }
         composable(Routes.POSITIONS) {
@@ -102,6 +113,7 @@ fun OptionTrackerNavHost(factory: ViewModelProvider.Factory) {
             PositionEditorRoute(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
+                recognizeScreenshot = recognizeScreenshot,
             )
         }
         composable(

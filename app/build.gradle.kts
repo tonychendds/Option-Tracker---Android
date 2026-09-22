@@ -13,8 +13,8 @@ android {
         applicationId = "com.optiontracker.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
     }
 
     buildTypes {
@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.mlkit.text.recognition)
     ksp(libs.androidx.room.compiler)
 
     implementation(platform(libs.compose.bom))

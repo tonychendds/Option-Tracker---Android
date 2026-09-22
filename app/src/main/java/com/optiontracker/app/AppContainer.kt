@@ -10,6 +10,8 @@ import com.optiontracker.app.data.SettingsRepository
 import androidx.room.withTransaction
 import com.optiontracker.app.data.local.OptionDatabase
 import com.optiontracker.app.ui.ReportYearStore
+import com.optiontracker.app.ui.ocr.MlKitScreenshotReader
+import com.optiontracker.app.ui.ocr.ScreenshotDraftStore
 import com.optiontracker.app.ui.close.ClosePositionViewModel
 import com.optiontracker.app.ui.detail.PositionDetailViewModel
 import com.optiontracker.app.ui.editor.PositionEditorViewModel
@@ -26,6 +28,8 @@ class AppContainer(context: Context) {
     )
     val settingsRepository = SettingsRepository(context)
     private val reportYear = ReportYearStore()
+    val screenshotDrafts = ScreenshotDraftStore()
+    val screenshotReader = MlKitScreenshotReader(context)
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
         initializer { DashboardViewModel(repository, reportYear) }
@@ -33,7 +37,7 @@ class AppContainer(context: Context) {
         initializer { HistoryViewModel(repository, reportYear) }
         initializer { SettingsViewModel(settingsRepository, repository) }
         initializer { PositionDetailViewModel(repository, createSavedStateHandle()) }
-        initializer { PositionEditorViewModel(repository, createSavedStateHandle()) }
+        initializer { PositionEditorViewModel(repository, createSavedStateHandle(), screenshotDrafts) }
         initializer { ClosePositionViewModel(repository, createSavedStateHandle()) }
     }
 }

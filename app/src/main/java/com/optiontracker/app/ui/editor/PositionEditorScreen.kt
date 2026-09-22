@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import android.net.Uri
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -20,6 +24,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -29,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.validation.Fields
+import com.optiontracker.app.ui.ocr.rememberScreenshotImport
 import com.optiontracker.app.ui.components.DateField
 import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
@@ -41,8 +49,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 fun PositionEditorRoute(
     viewModel: PositionEditorViewModel,
     onBack: () -> Unit,
+    recognizeScreenshot: suspend (Uri) -> String,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var reading by remember { mutableStateOf(false) }
+    val pickScreenshot = rememberScreenshotImport(
+        recognize = recognizeScreenshot,
+        onResult = viewModel::applyImport,
+        onReading = { reading = it },
+    )
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             if (event is EditorEvent.Saved) onBack()
@@ -50,6 +65,8 @@ fun PositionEditorRoute(
     }
     PositionEditorScreen(
         state = state,
+        readingScreenshot = reading,
+        onImportScreenshot = pickScreenshot,
         onBack = onBack,
         onTicker = viewModel::onTicker,
         onSide = viewModel::onSide,
@@ -68,6 +85,8 @@ fun PositionEditorRoute(
 @Composable
 fun PositionEditorScreen(
     state: EditorUiState,
+    readingScreenshot: Boolean = false,
+    onImportScreenshot: () -> Unit = {},
     onBack: () -> Unit,
     onTicker: (String) -> Unit,
     onSide: (OptionSide) -> Unit,
@@ -105,6 +124,8 @@ fun PositionEditorScreen(
                 }
                 else -> EditorForm(
                     state = state,
+                    readingScreenshot = readingScreenshot,
+                    onImportScreenshot = onImportScreenshot,
                     onTicker = onTicker,
                     onSide = onSide,
                     onType = onType,
@@ -125,6 +146,8 @@ fun PositionEditorScreen(
 @Composable
 private fun EditorForm(
     state: EditorUiState,
+    readingScreenshot: Boolean,
+    onImportScreenshot: () -> Unit,
     onTicker: (String) -> Unit,
     onSide: (OptionSide) -> Unit,
     onType: (OptionType) -> Unit,
@@ -145,6 +168,38 @@ private fun EditorForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (!state.editing) {
+            OutlinedButton(
+                onClick = onImportScreenshot,
+                enabled = !readingScreenshot && !state.saving,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(if (readingScreenshot) "Reading screenshot…" else "Add from screenshot")
+            }
+            Text(
+                "Charles Schwab trade details. Text is read on this device and is not uploaded. Nothing is saved until you tap Save.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        state.importMessage?.let { message ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (state.importFailed) {
+                        MaterialTheme.colorScheme.errorContainer
+                    } else {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    },
+                ),
+            ) {
+                Text(
+                    message,
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
         Text(
             "Equity options use a 100 share multiplier. A \$1.50 premium on 1 contract is \$150 before fees.",
             style = MaterialTheme.typography.bodySmall,

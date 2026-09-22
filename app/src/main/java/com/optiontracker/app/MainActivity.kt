@@ -19,7 +19,11 @@ class MainActivity : ComponentActivity() {
             val themeMode by app.container.settingsRepository.themeMode
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             OptionTrackerTheme(themeMode = themeMode) {
-                OptionTrackerNavHost(factory = app.container.viewModelFactory)
+                OptionTrackerNavHost(
+                    factory = app.container.viewModelFactory,
+                    recognizeScreenshot = app.container.screenshotReader::recognize,
+                    screenshotDrafts = app.container.screenshotDrafts,
+                )
             }
         }
     }
