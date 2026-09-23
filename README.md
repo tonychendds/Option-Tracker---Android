@@ -26,7 +26,7 @@ Premiums are the quoted price **per share**, in US dollars. Standard equity opti
 notional = premium per share × contracts × 100
 ```
 
-The add and close screens label this. One contract at a $1.50 premium is $150 before fees.
+The add and close screens label this. One contract at a $1.50 premium is $150 before fees. Type the premium as a positive number. **Buy** means you pay it (a debit). **Sell** means you receive it (a credit). Closing reverses that cash flow: selling to close receives the exit premium, and buying to close pays it.
 
 Fees are the total commissions for that leg. They always reduce the result.
 

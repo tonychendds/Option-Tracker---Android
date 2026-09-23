@@ -45,6 +45,8 @@ import com.optiontracker.app.ui.components.DateField
 import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.TrackerScaffold
+import com.optiontracker.app.ui.format.premiumCashFlowHint
+import com.optiontracker.app.ui.format.premiumCashFlowLabel
 import com.optiontracker.app.ui.format.sideLabel
 import com.optiontracker.app.ui.format.typeLabel
 import androidx.compose.foundation.text.KeyboardOptions
@@ -288,6 +290,11 @@ private fun EditorForm(
             supportingText = { Text(state.errors[Fields.CONTRACTS] ?: "Number of contracts, not shares") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
+        Text(
+            premiumCashFlowLabel(state.side),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = state.premium,
             onValueChange = onPremium,
@@ -297,7 +304,7 @@ private fun EditorForm(
             singleLine = true,
             isError = state.errors.containsKey(Fields.PREMIUM),
             supportingText = {
-                Text(state.errors[Fields.PREMIUM] ?: "Quoted per share. Total = premium × contracts × 100.")
+                Text(state.errors[Fields.PREMIUM] ?: premiumCashFlowHint(state.side))
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )

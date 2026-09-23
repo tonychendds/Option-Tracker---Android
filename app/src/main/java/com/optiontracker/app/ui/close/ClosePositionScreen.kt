@@ -36,6 +36,8 @@ import com.optiontracker.app.ui.components.TrackerScaffold
 import com.optiontracker.app.ui.format.contractsLabel
 import com.optiontracker.app.ui.format.formatDate
 import com.optiontracker.app.ui.format.pnlColor
+import com.optiontracker.app.ui.format.exitPremiumCashFlowHint
+import com.optiontracker.app.ui.format.exitPremiumCashFlowLabel
 import com.optiontracker.app.ui.format.sideLabel
 import com.optiontracker.app.ui.format.typeLabel
 import androidx.compose.foundation.text.KeyboardOptions
@@ -127,6 +129,11 @@ private fun CloseForm(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         DateField(label = "Exit date", date = state.exitDate, onDate = onExitDate, error = null)
+        Text(
+            exitPremiumCashFlowLabel(position.side),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = state.exitPremium,
             onValueChange = onExitPremium,
@@ -136,7 +143,7 @@ private fun CloseForm(
             singleLine = true,
             isError = state.errors.containsKey(Fields.EXIT_PREMIUM),
             supportingText = {
-                Text(state.errors[Fields.EXIT_PREMIUM] ?: "Same quote as entry. Proceeds = premium × contracts × 100.")
+                Text(state.errors[Fields.EXIT_PREMIUM] ?: exitPremiumCashFlowHint(position.side))
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )

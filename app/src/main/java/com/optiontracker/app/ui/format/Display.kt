@@ -33,6 +33,25 @@ fun formatHitRate(rate: Double?): String {
 
 fun sideLabel(side: OptionSide): String = if (side == OptionSide.BUY) "Buy" else "Sell"
 
+/** Buy pays the premium. Sell receives it. The amount itself stays positive. */
+fun premiumCashFlowLabel(side: OptionSide): String = if (side == OptionSide.BUY) "Debit" else "Credit"
+
+fun premiumCashFlowHint(side: OptionSide): String = if (side == OptionSide.BUY) {
+    "Debit — you pay this premium. Quoted per share. Total = premium × contracts × 100."
+} else {
+    "Credit — you receive this premium. Quoted per share. Total = premium × contracts × 100."
+}
+
+/** Closing pays or receives the opposite of the opening side. */
+fun exitPremiumCashFlowLabel(openSide: OptionSide): String =
+    if (openSide == OptionSide.BUY) "Credit" else "Debit"
+
+fun exitPremiumCashFlowHint(openSide: OptionSide): String = if (openSide == OptionSide.BUY) {
+    "Credit — you receive this premium when selling to close. Quoted per share. Total = premium × contracts × 100."
+} else {
+    "Debit — you pay this premium when buying to close. Quoted per share. Total = premium × contracts × 100."
+}
+
 fun typeLabel(type: OptionType): String = if (type == OptionType.CALL) "Call" else "Put"
 
 fun contractsLabel(count: Int): String = if (count == 1) "1 contract" else "$count contracts"
