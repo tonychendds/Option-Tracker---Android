@@ -20,6 +20,8 @@ import com.optiontracker.app.ui.close.ClosePositionViewModel
 import com.optiontracker.app.ui.detail.PositionDetailViewModel
 import com.optiontracker.app.ui.editor.PositionEditorViewModel
 import com.optiontracker.app.ui.history.HistoryViewModel
+import com.optiontracker.app.ui.symbols.SymbolTradesViewModel
+import com.optiontracker.app.ui.symbols.SymbolsViewModel
 import com.optiontracker.app.ui.home.DashboardViewModel
 import com.optiontracker.app.ui.positions.PositionsViewModel
 import com.optiontracker.app.ui.settings.SettingsViewModel
@@ -47,6 +49,8 @@ class AppContainer(context: Context) {
         initializer { PositionsViewModel(repository, quotes, quotes) }
         initializer { AssignedViewModel(assignedLots, quotes) }
         initializer { HistoryViewModel(repository, reportYear) }
+        initializer { SymbolsViewModel(repository, reportYear) }
+        initializer { SymbolTradesViewModel(repository, createSavedStateHandle()) }
         initializer { SettingsViewModel(settingsRepository, repository) }
         initializer { PositionDetailViewModel(repository, createSavedStateHandle()) }
         initializer { PositionEditorViewModel(repository, createSavedStateHandle(), screenshotDrafts) }

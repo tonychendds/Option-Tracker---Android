@@ -162,6 +162,10 @@ The same row keeps the entry premium and adds a delayed quote for that contract,
 
 Next to that price, an open call or put is marked ITM, ATM, or OTM. ATM means the delayed stock price is within 0.5% of the strike, including an exact match. A call is ITM above that band and OTM below it. A put is the reverse. If the quote is missing, the moneyness chip is omitted. Chip color follows the side: a short ITM and a long OTM are red, a short OTM and a long ITM are green, and ATM is grey.
 
+## Symbols
+
+History → **Symbols** lists realized option P/L by ticker. The default period is the same year as Home, labeled like `2026 YTD`, and uses the **close date**. **All** includes every closed year. **Largest** puts the biggest winners and losers first. **A–Z** sorts by ticker. Each row shows the trade count, wins, losses, and hit rate. A stored realized P/L override is included. Open trades and assigned stock lots are not. Tap a ticker to see the closed trades in that total.
+
 ## Assigned puts
 
 **Assigned** in the bottom bar lists shares from short puts that were assigned. Each row shows the ticker, cost basis (the put’s strike per share), the same delayed stock quote, the assigned date, the share count (contracts × 100), and unrealized P/L: `(quote − cost basis) × shares`. Pull down to refresh. If the quote is missing, the price and the P/L are an em dash. The footer says the quote is delayed.

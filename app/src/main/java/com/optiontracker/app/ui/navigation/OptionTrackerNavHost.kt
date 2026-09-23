@@ -20,8 +20,12 @@ import com.optiontracker.app.ui.detail.PositionDetailRoute
 import com.optiontracker.app.ui.detail.PositionDetailViewModel
 import com.optiontracker.app.ui.editor.PositionEditorRoute
 import com.optiontracker.app.ui.editor.PositionEditorViewModel
+import com.optiontracker.app.domain.pnl.SymbolPeriod
 import com.optiontracker.app.ui.history.HistoryRoute
 import com.optiontracker.app.ui.history.HistoryViewModel
+import com.optiontracker.app.ui.symbols.SymbolTradesRoute
+import com.optiontracker.app.ui.symbols.SymbolTradesViewModel
+import com.optiontracker.app.ui.symbols.SymbolsViewModel
 import com.optiontracker.app.ui.home.DashboardRoute
 import com.optiontracker.app.ui.home.DashboardViewModel
 import com.optiontracker.app.ui.positions.PositionsRoute
@@ -79,10 +83,22 @@ fun OptionTrackerNavHost(
         }
         composable(Routes.HISTORY) {
             val viewModel: HistoryViewModel = viewModel(factory = factory)
+            val symbolsViewModel: SymbolsViewModel = viewModel(factory = factory)
             HistoryRoute(
                 viewModel = viewModel,
+                symbolsViewModel = symbolsViewModel,
                 onNavigate = navigateTop,
                 onOpen = { navController.navigate(Routes.historyDetail(it)) },
+                onOpenTicker = { ticker ->
+                    val symbols = symbolsViewModel.uiState.value
+                    navController.navigate(
+                        Routes.symbolTrades(
+                            ticker = ticker,
+                            year = symbols.year,
+                            allTime = symbols.period == SymbolPeriod.ALL,
+                        ),
+                    )
+                },
             )
         }
         composable(Routes.SETTINGS) {
@@ -158,6 +174,24 @@ fun OptionTrackerNavHost(
                         restoreState = true
                     }
                 },
+            )
+        }
+        composable(
+            route = Routes.SYMBOL_TRADES,
+            arguments = listOf(
+                navArgument("ticker") { type = NavType.StringType },
+                navArgument("year") { type = NavType.IntType },
+                navArgument("allTime") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
+            ),
+        ) {
+            val viewModel: SymbolTradesViewModel = viewModel(factory = factory)
+            SymbolTradesRoute(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onOpen = { navController.navigate(Routes.historyDetail(it)) },
             )
         }
         composable(

@@ -11,10 +11,13 @@ object Routes {
     const val CLOSE = "close/{positionId}?assigned={assigned}"
     const val ASSIGNED_EDITOR = "assignedEditor?lotId={lotId}"
     const val HISTORY_DETAIL = "historyDetail/{positionId}"
+    const val SYMBOL_TRADES = "symbolTrades/{ticker}?year={year}&allTime={allTime}"
 
     fun detail(id: Long) = "detail/$id"
     fun editor(id: Long? = null) = "editor?positionId=${id ?: -1L}"
     fun close(id: Long, assigned: Boolean = false) = "close/$id?assigned=$assigned"
     fun assignedEditor(id: Long? = null) = "assignedEditor?lotId=${id ?: -1L}"
     fun historyDetail(id: Long) = "historyDetail/$id"
+    fun symbolTrades(ticker: String, year: Int, allTime: Boolean) =
+        "symbolTrades/${android.net.Uri.encode(ticker)}?year=$year&allTime=$allTime"
 }
