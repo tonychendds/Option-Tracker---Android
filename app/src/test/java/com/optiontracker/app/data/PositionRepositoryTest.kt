@@ -105,6 +105,38 @@ class PositionRepositoryTest {
         assertTrue(threw)
     }
 
+    @Test
+    fun closedTradeKeepsExitChangesOverrideAndCanBeDeleted() = runBlocking {
+        val id = repo.save(draft(ticker = "NVDA", side = OptionSide.SELL, premium = 1_000))
+        assertEquals(
+            CloseOutcome.Closed,
+            repo.closePosition(id, 500, 0, LocalDate.of(2026, 9, 20)),
+        )
+        val closed = repo.getPosition(id)!!
+        assertEquals(PositionStatus.CLOSED, closed.status)
+        assertEquals(50_000L, closed.realizedPnlCents())
+
+        repo.save(closed.copy(exitPremiumCents = 160, realizedOverrideCents = null))
+        val repriced = repo.getPosition(id)!!
+        assertNull(repriced.realizedOverrideCents)
+        assertEquals(84_000L, repriced.realizedPnlCents())
+        assertEquals(closed.createdAtEpochMillis, repriced.createdAtEpochMillis)
+
+        repo.save(repriced.copy(exitPremiumCents = 500, realizedOverrideCents = 84_000L))
+        val overridden = repo.getPosition(id)!!
+        assertEquals(84_000L, overridden.realizedOverrideCents)
+        assertEquals(84_000L, overridden.realizedPnlCents())
+
+        repo.save(overridden.copy(realizedOverrideCents = null, exitPremiumCents = 160))
+        val cleared = repo.getPosition(id)!!
+        assertNull(cleared.realizedOverrideCents)
+        assertEquals(84_000L, cleared.realizedPnlCents())
+
+        repo.delete(id)
+        assertNull(repo.getPosition(id))
+        assertTrue(repo.observeClosedPositions().first().isEmpty())
+    }
+
     private fun draft(
         ticker: String,
         strikeCents: Long = 20_000,

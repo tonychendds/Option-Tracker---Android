@@ -1,7 +1,12 @@
 package com.optiontracker.app.domain.pnl
 
 import com.optiontracker.app.domain.model.OptionSide
+import com.optiontracker.app.domain.model.OptionType
+import com.optiontracker.app.domain.model.Position
+import com.optiontracker.app.domain.model.PositionStatus
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class OptionPnlTest {
@@ -88,6 +93,24 @@ class OptionPnlTest {
     }
 
     @Test
+    fun storedOverrideReplacesComputedPnlUntilCleared() {
+        val computed = closedNvda(exitPremiumCents = 160, override = null)
+        assertNull(computed.realizedOverrideCents)
+        assertEquals(84_000L, computed.realizedPnlCents())
+
+        val overridden = computed.copy(exitPremiumCents = 500, realizedOverrideCents = 84_000L)
+        assertEquals(84_000L, overridden.realizedPnlCents())
+
+        val loss = computed.copy(realizedOverrideCents = -84_000L)
+        assertEquals(-84_000L, loss.realizedPnlCents())
+
+        val cleared = overridden.copy(realizedOverrideCents = null, exitPremiumCents = 160)
+        assertEquals(84_000L, cleared.realizedPnlCents())
+
+        assertEquals(null, computed.copy(status = PositionStatus.OPEN).realizedPnlCents())
+    }
+
+    @Test
     fun feesCanTurnAShortIntoADebit() {
         // $0.01 premium × 1 × 100 = $1.00 credit, $2.00 fees.
         assertEquals(
@@ -95,4 +118,25 @@ class OptionPnlTest {
             OptionPnl.entryCashFlowCents(OptionSide.SELL, 1, 1, 200),
         )
     }
+
+    private fun closedNvda(exitPremiumCents: Long, override: Long?) = Position(
+        id = 1,
+        ticker = "NVDA",
+        side = OptionSide.SELL,
+        type = OptionType.CALL,
+        strikeCents = 18_000,
+        expiry = LocalDate.of(2026, 10, 16),
+        contracts = 1,
+        entryPremiumCents = 1_000,
+        entryFeesCents = 0,
+        openedOn = LocalDate.of(2026, 9, 1),
+        notes = "",
+        status = PositionStatus.CLOSED,
+        exitPremiumCents = exitPremiumCents,
+        exitFeesCents = 0,
+        closedOn = LocalDate.of(2026, 9, 20),
+        createdAtEpochMillis = 0,
+        updatedAtEpochMillis = 0,
+        realizedOverrideCents = override,
+    )
 }

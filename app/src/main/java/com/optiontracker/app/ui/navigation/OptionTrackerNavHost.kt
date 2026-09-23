@@ -98,6 +98,7 @@ fun OptionTrackerNavHost(
                 viewModel = viewModel,
                 readOnly = true,
                 onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Routes.editor(it)) },
             )
         }
         composable(

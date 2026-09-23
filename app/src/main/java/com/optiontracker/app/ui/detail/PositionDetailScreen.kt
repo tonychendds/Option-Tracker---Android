@@ -141,7 +141,7 @@ private fun PositionBody(
             )
             Text(
                 if (position.realizedOverrideCents != null) {
-                    "Taken from the spreadsheet realized P/L. Entry and exit premiums are kept, but they are not used for this result."
+                    "This is the realized P/L override. Entry and exit premiums are kept, but they are not used for this result."
                 } else {
                     "Entry versus exit premium, times contracts, times 100, minus fees."
                 },
@@ -194,9 +194,14 @@ private fun PositionBody(
                 MaterialTheme.colorScheme.onSurface
             },
         )
-        if (!readOnly && open) {
+        if (open && !readOnly) {
             Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text("Edit") }
             Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text("Close position") }
+            OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Delete")
+            }
+        } else if (!open) {
+            Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text("Edit") }
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Delete")
             }

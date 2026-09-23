@@ -45,6 +45,8 @@ import com.optiontracker.app.ui.components.DateField
 import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.TrackerScaffold
+import com.optiontracker.app.ui.format.exitPremiumCashFlowHint
+import com.optiontracker.app.ui.format.exitPremiumCashFlowLabel
 import com.optiontracker.app.ui.format.premiumCashFlowHint
 import com.optiontracker.app.ui.format.premiumCashFlowLabel
 import com.optiontracker.app.ui.format.sideLabel
@@ -84,6 +86,11 @@ fun PositionEditorRoute(
         onFees = viewModel::onFees,
         onOpenedOn = viewModel::onOpenedOn,
         onNotes = viewModel::onNotes,
+        onExitPremium = viewModel::onExitPremium,
+        onExitFees = viewModel::onExitFees,
+        onClosedOn = viewModel::onClosedOn,
+        onOverride = viewModel::onOverride,
+        onOverrideLoss = viewModel::onOverrideLoss,
         onSave = viewModel::save,
         onDismissDuplicate = viewModel::dismissDuplicate,
         onSaveAnyway = viewModel::saveAnyway,
@@ -106,12 +113,21 @@ fun PositionEditorScreen(
     onFees: (String) -> Unit,
     onOpenedOn: (java.time.LocalDate) -> Unit,
     onNotes: (String) -> Unit,
+    onExitPremium: (String) -> Unit = {},
+    onExitFees: (String) -> Unit = {},
+    onClosedOn: (java.time.LocalDate) -> Unit = {},
+    onOverride: (String) -> Unit = {},
+    onOverrideLoss: (Boolean) -> Unit = {},
     onSave: () -> Unit,
     onDismissDuplicate: () -> Unit = {},
     onSaveAnyway: () -> Unit = {},
 ) {
     TrackerScaffold(
-        title = if (state.editing) "Edit position" else "Add position",
+        title = when {
+            state.closed -> "Edit closed trade"
+            state.editing -> "Edit position"
+            else -> "Add position"
+        },
         onBack = onBack,
     ) { padding ->
         ScreenColumn(padding, modifier = Modifier.fillMaxSize()) {
@@ -146,6 +162,11 @@ fun PositionEditorScreen(
                     onFees = onFees,
                     onOpenedOn = onOpenedOn,
                     onNotes = onNotes,
+                    onExitPremium = onExitPremium,
+                    onExitFees = onExitFees,
+                    onClosedOn = onClosedOn,
+                    onOverride = onOverride,
+                    onOverrideLoss = onOverrideLoss,
                     onSave = onSave,
                     onDismissDuplicate = onDismissDuplicate,
                     onSaveAnyway = onSaveAnyway,
@@ -170,6 +191,11 @@ private fun EditorForm(
     onFees: (String) -> Unit,
     onOpenedOn: (java.time.LocalDate) -> Unit,
     onNotes: (String) -> Unit,
+    onExitPremium: (String) -> Unit,
+    onExitFees: (String) -> Unit,
+    onClosedOn: (java.time.LocalDate) -> Unit,
+    onOverride: (String) -> Unit,
+    onOverrideLoss: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDismissDuplicate: () -> Unit,
     onSaveAnyway: () -> Unit,
@@ -333,6 +359,74 @@ private fun EditorForm(
             minLines = 3,
             supportingText = { Text(state.errors[Fields.NOTES] ?: "Optional") },
         )
+        if (state.closed) {
+            Text(
+                exitPremiumCashFlowLabel(state.side),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = state.exitPremium,
+                onValueChange = onExitPremium,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Exit premium per share") },
+                prefix = { Text("$") },
+                singleLine = true,
+                isError = state.errors.containsKey(Fields.EXIT_PREMIUM),
+                supportingText = {
+                    Text(state.errors[Fields.EXIT_PREMIUM] ?: exitPremiumCashFlowHint(state.side))
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            OutlinedTextField(
+                value = state.exitFees,
+                onValueChange = onExitFees,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Exit fees (optional)") },
+                prefix = { Text("$") },
+                singleLine = true,
+                isError = state.errors.containsKey(Fields.EXIT_FEES),
+                supportingText = {
+                    Text(state.errors[Fields.EXIT_FEES] ?: "Total commissions to close")
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            DateField(
+                label = "Closed on",
+                date = state.closedOn,
+                onDate = onClosedOn,
+                error = state.errors[Fields.CLOSED_ON],
+            )
+            Text("Realized P/L override", style = MaterialTheme.typography.labelLarge)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = !state.overrideLoss,
+                    onClick = { onOverrideLoss(false) },
+                    shape = SegmentedButtonDefaults.itemShape(0, 2),
+                ) { Text("Profit") }
+                SegmentedButton(
+                    selected = state.overrideLoss,
+                    onClick = { onOverrideLoss(true) },
+                    shape = SegmentedButtonDefaults.itemShape(1, 2),
+                ) { Text("Loss") }
+            }
+            OutlinedTextField(
+                value = state.overrideText,
+                onValueChange = onOverride,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Override dollars (optional)") },
+                prefix = { Text(if (state.overrideLoss && state.overrideText.isNotBlank()) "−$" else "$") },
+                singleLine = true,
+                isError = state.errors.containsKey(Fields.OVERRIDE),
+                supportingText = {
+                    Text(
+                        state.errors[Fields.OVERRIDE]
+                            ?: "Leave blank to use premiums and fees. 840 is a $840 profit or loss.",
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+        }
         Button(
             onClick = onSave,
             enabled = !state.saving,

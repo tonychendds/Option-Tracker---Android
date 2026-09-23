@@ -66,8 +66,22 @@ class PositionRepository(
         } else {
             val existing = dao.getById(normalized.id)
                 ?: throw IllegalArgumentException("Position not found")
-            if (existing.status != PositionStatus.OPEN.name) {
-                throw IllegalStateException("Closed positions are read-only")
+            if (existing.status == PositionStatus.CLOSED.name) {
+                if (normalized.status != PositionStatus.CLOSED) {
+                    throw IllegalStateException("Closed positions stay closed")
+                }
+                dao.update(
+                    normalized.copy(
+                        status = PositionStatus.CLOSED,
+                        exitFeesCents = normalized.exitFeesCents ?: 0L,
+                        createdAtEpochMillis = existing.createdAtEpochMillis,
+                        updatedAtEpochMillis = now,
+                    ).toEntity(),
+                )
+                return normalized.id
+            }
+            if (normalized.status != PositionStatus.OPEN) {
+                throw IllegalStateException("Use close to finish an open trade")
             }
             dao.update(
                 normalized.copy(

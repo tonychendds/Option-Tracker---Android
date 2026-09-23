@@ -12,6 +12,7 @@ import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
 import com.optiontracker.app.domain.money.Money
 import com.optiontracker.app.domain.ocr.BrokerParseResult
+import com.optiontracker.app.domain.validation.Fields
 import com.optiontracker.app.domain.validation.PositionValidator
 import com.optiontracker.app.ui.ocr.ScreenshotDraftStore
 import java.time.LocalDate
@@ -40,6 +41,12 @@ data class EditorUiState(
     val notes: String = "",
     val account: String = "",
     val realizedOverrideCents: Long? = null,
+    val closed: Boolean = false,
+    val exitPremium: String = "",
+    val exitFees: String = "",
+    val closedOn: LocalDate? = null,
+    val overrideText: String = "",
+    val overrideLoss: Boolean = false,
     val errors: Map<String, String> = emptyMap(),
     val saving: Boolean = false,
     val importMessage: String? = null,
@@ -72,7 +79,7 @@ class PositionEditorViewModel(
         if (id != null) {
             viewModelScope.launch {
                 val position = repository.getPosition(id)
-                if (position == null || position.status != PositionStatus.OPEN) {
+                if (position == null) {
                     _state.update { it.copy(loading = false, missing = true) }
                 } else {
                     _state.update { it.from(position) }
@@ -122,6 +129,11 @@ class PositionEditorViewModel(
     fun onFees(value: String) = update { copy(fees = value) }
     fun onOpenedOn(value: LocalDate) = update { copy(openedOn = value) }
     fun onNotes(value: String) = update { copy(notes = value.take(PositionValidator.MAX_NOTES)) }
+    fun onExitPremium(value: String) = update { copy(exitPremium = value) }
+    fun onExitFees(value: String) = update { copy(exitFees = value) }
+    fun onClosedOn(value: LocalDate) = update { copy(closedOn = value) }
+    fun onOverride(value: String) = update { copy(overrideText = value.filter { it.isDigit() || it == '.' }.take(12)) }
+    fun onOverrideLoss(loss: Boolean) = update { copy(overrideLoss = loss) }
 
     fun save() = persist(ignoreDuplicate = false)
 
@@ -131,15 +143,26 @@ class PositionEditorViewModel(
 
     private fun persist(ignoreDuplicate: Boolean) {
         val current = _state.value
-        val errors = PositionValidator.validateEntry(
-            ticker = current.ticker,
-            strikeText = current.strike,
-            expiry = current.expiry,
-            contractsText = current.contracts,
-            premiumText = current.premium,
-            feesText = current.fees,
-            notes = current.notes,
-        )
+        val errors = buildMap {
+            putAll(
+                PositionValidator.validateEntry(
+                    ticker = current.ticker,
+                    strikeText = current.strike,
+                    expiry = current.expiry,
+                    contractsText = current.contracts,
+                    premiumText = current.premium,
+                    feesText = current.fees,
+                    notes = current.notes,
+                ),
+            )
+            if (current.closed) {
+                putAll(PositionValidator.validateClose(current.exitPremium, current.exitFees))
+                if (current.closedOn == null) put(Fields.CLOSED_ON, "Choose the close date")
+                if (current.overrideText.isNotBlank() && Money.parseCents(current.overrideText) == null) {
+                    put(Fields.OVERRIDE, "Enter a realized P/L with up to 2 decimals, or leave blank")
+                }
+            }
+        }
         if (errors.isNotEmpty()) {
             _state.update { it.copy(errors = errors, duplicatePrompt = null) }
             return
@@ -149,6 +172,15 @@ class PositionEditorViewModel(
         val contracts = current.contracts.toIntOrNull() ?: return
         val premium = Money.parseCents(current.premium) ?: return
         val fees = PositionValidator.parseOptionalFees(current.fees) ?: return
+        val exitPremium = if (current.closed) Money.parseCents(current.exitPremium) else null
+        val exitFees = if (current.closed) PositionValidator.parseOptionalFees(current.exitFees) else null
+        val closedOn = if (current.closed) current.closedOn else null
+        val overrideCents = if (current.closed) {
+            PositionValidator.parseOverrideCents(current.overrideText, current.overrideLoss)
+        } else {
+            current.realizedOverrideCents
+        }
+        if (current.closed && (exitPremium == null || exitFees == null || closedOn == null)) return
         viewModelScope.launch {
             if (!ignoreDuplicate) {
                 val match = DuplicateDetector.find(
@@ -178,14 +210,14 @@ class PositionEditorViewModel(
                     entryFeesCents = fees,
                     openedOn = current.openedOn,
                     notes = current.notes,
-                    status = PositionStatus.OPEN,
-                    exitPremiumCents = null,
-                    exitFeesCents = null,
-                    closedOn = null,
+                    status = if (current.closed) PositionStatus.CLOSED else PositionStatus.OPEN,
+                    exitPremiumCents = exitPremium,
+                    exitFeesCents = exitFees,
+                    closedOn = closedOn,
                     createdAtEpochMillis = 0L,
                     updatedAtEpochMillis = 0L,
                     account = current.account,
-                    realizedOverrideCents = current.realizedOverrideCents,
+                    realizedOverrideCents = overrideCents,
                 ),
             )
             _events.emit(EditorEvent.Saved)
@@ -245,6 +277,12 @@ class PositionEditorViewModel(
         notes = position.notes,
         account = position.account,
         realizedOverrideCents = position.realizedOverrideCents,
+        closed = position.status == PositionStatus.CLOSED,
+        exitPremium = position.exitPremiumCents?.let(Money::toInput).orEmpty(),
+        exitFees = if ((position.exitFeesCents ?: 0L) == 0L) "" else Money.toInput(position.exitFeesCents ?: 0L),
+        closedOn = position.closedOn,
+        overrideText = position.realizedOverrideCents?.let { Money.toInput(kotlin.math.abs(it)) }.orEmpty(),
+        overrideLoss = (position.realizedOverrideCents ?: 0L) < 0L,
         errors = emptyMap(),
         saving = false,
     )

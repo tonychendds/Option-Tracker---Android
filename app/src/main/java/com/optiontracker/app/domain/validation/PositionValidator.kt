@@ -1,6 +1,7 @@
 package com.optiontracker.app.domain.validation
 
 import com.optiontracker.app.domain.model.Position
+import com.optiontracker.app.domain.model.PositionStatus
 import com.optiontracker.app.domain.money.Money
 import com.optiontracker.app.domain.pnl.OptionPnl
 import java.time.LocalDate
@@ -14,6 +15,8 @@ object Fields {
     const val FEES = "fees"
     const val EXIT_PREMIUM = "exitPremium"
     const val EXIT_FEES = "exitFees"
+    const val CLOSED_ON = "closedOn"
+    const val OVERRIDE = "override"
     const val NOTES = "notes"
 }
 
@@ -107,7 +110,28 @@ object PositionValidator {
         }
         val exitFees = position.exitFeesCents
         if (exitFees != null && (exitFees < 0L || exitFees > Money.MAX_CENTS)) return "Invalid exit fees"
+        val override = position.realizedOverrideCents
+        if (override != null && (override > Money.MAX_CENTS || override < -Money.MAX_CENTS)) {
+            return "Invalid realized P/L"
+        }
+        if (position.status == PositionStatus.CLOSED) {
+            if (position.closedOn == null) return "A closed trade needs a close date"
+            if (position.exitPremiumCents == null && override == null) {
+                return "A closed trade needs an exit premium or a realized P/L"
+            }
+        }
         return null
+    }
+
+    /**
+     * Blank means no override, so realized P/L is computed from premiums and fees.
+     * A number is stored in cents. [loss] makes a non-zero amount negative.
+     */
+    fun parseOverrideCents(text: String, loss: Boolean): Long? {
+        if (text.isBlank()) return null
+        val cents = Money.parseCents(text) ?: return null
+        val signed = if (loss && cents != 0L) -cents else cents
+        return signed.takeIf { it <= Money.MAX_CENTS && it >= -Money.MAX_CENTS }
     }
 
     fun parseOptionalFees(text: String): Long? {
