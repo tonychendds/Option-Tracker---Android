@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -162,15 +163,22 @@ fun ScreenColumn(
 
 @Composable
 fun StatusChip(text: String, container: ColorRole = ColorRole.PRIMARY) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val background = when (container) {
         ColorRole.PRIMARY -> MaterialTheme.colorScheme.primaryContainer
         ColorRole.SECONDARY -> MaterialTheme.colorScheme.secondaryContainer
         ColorRole.TERTIARY -> MaterialTheme.colorScheme.tertiaryContainer
+        ColorRole.DANGER -> if (dark) Color(0xFF93000A) else Color(0xFFFFDAD6)
+        ColorRole.SAFE -> if (dark) Color(0xFF1B5E20) else Color(0xFFC8E6C9)
+        ColorRole.NEUTRAL -> if (dark) Color(0xFF5C5C5C) else Color(0xFFE6E6E6)
     }
     val foreground = when (container) {
         ColorRole.PRIMARY -> MaterialTheme.colorScheme.onPrimaryContainer
         ColorRole.SECONDARY -> MaterialTheme.colorScheme.onSecondaryContainer
         ColorRole.TERTIARY -> MaterialTheme.colorScheme.onTertiaryContainer
+        ColorRole.DANGER -> if (dark) Color(0xFFFFDAD6) else Color(0xFF690005)
+        ColorRole.SAFE -> if (dark) Color(0xFFC8E6C9) else Color(0xFF0D3B12)
+        ColorRole.NEUTRAL -> if (dark) Color(0xFFEEEEEE) else Color(0xFF3C3C3C)
     }
     Surface(color = background, shape = RoundedCornerShape(50)) {
         Text(
@@ -182,7 +190,7 @@ fun StatusChip(text: String, container: ColorRole = ColorRole.PRIMARY) {
     }
 }
 
-enum class ColorRole { PRIMARY, SECONDARY, TERTIARY }
+enum class ColorRole { PRIMARY, SECONDARY, TERTIARY, DANGER, SAFE, NEUTRAL }
 
 @Composable
 fun DetailRow(label: String, value: String, valueColor: Color? = null) {

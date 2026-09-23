@@ -1,5 +1,6 @@
 package com.optiontracker.app.domain.moneyness
 
+import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -27,6 +28,16 @@ class MoneynessTest {
         assertEquals(Moneyness.ATM, MoneynessClassifier.of(OptionType.CALL, strike, 10_050))
         assertEquals(Moneyness.ATM, MoneynessClassifier.of(OptionType.PUT, strike, 9_950))
         assertEquals(Moneyness.ATM, MoneynessClassifier.fromQuote(OptionType.CALL, strike, "$100.50"))
+    }
+
+    @Test
+    fun shortItmAndLongOtmAreDanger() {
+        assertEquals(MoneynessTone.DANGER, moneynessTone(OptionSide.SELL, Moneyness.ITM))
+        assertEquals(MoneynessTone.SAFE, moneynessTone(OptionSide.SELL, Moneyness.OTM))
+        assertEquals(MoneynessTone.NEUTRAL, moneynessTone(OptionSide.SELL, Moneyness.ATM))
+        assertEquals(MoneynessTone.DANGER, moneynessTone(OptionSide.BUY, Moneyness.OTM))
+        assertEquals(MoneynessTone.SAFE, moneynessTone(OptionSide.BUY, Moneyness.ITM))
+        assertEquals(MoneynessTone.NEUTRAL, moneynessTone(OptionSide.BUY, Moneyness.ATM))
     }
 
     @Test

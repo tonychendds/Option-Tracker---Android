@@ -27,9 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.optiontracker.app.domain.moneyness.Moneyness
 import com.optiontracker.app.domain.moneyness.MoneynessClassifier
+import com.optiontracker.app.domain.moneyness.MoneynessTone
+import com.optiontracker.app.domain.moneyness.moneynessTone
 import com.optiontracker.app.domain.quote.QuoteBoard
 import com.optiontracker.app.domain.quote.YahooSparkQuotes
 import com.optiontracker.app.domain.quote.underlyingQuoteLabel
+import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
@@ -166,7 +169,7 @@ fun PositionRow(
                     )
                 }
                 if (moneyness != null) {
-                    StatusChip(text = moneyness.name, container = moneynessColor(moneyness))
+                    StatusChip(text = moneyness.name, container = moneynessColor(position.side, moneyness))
                 }
             }
             StatusChip(text = "Open")
@@ -210,8 +213,9 @@ fun PositionRow(
     }
 }
 
-private fun moneynessColor(moneyness: Moneyness): ColorRole = when (moneyness) {
-    Moneyness.ITM -> ColorRole.PRIMARY
-    Moneyness.OTM -> ColorRole.TERTIARY
-    Moneyness.ATM -> ColorRole.SECONDARY
-}
+private fun moneynessColor(side: OptionSide, moneyness: Moneyness): ColorRole =
+    when (moneynessTone(side, moneyness)) {
+        MoneynessTone.DANGER -> ColorRole.DANGER
+        MoneynessTone.SAFE -> ColorRole.SAFE
+        MoneynessTone.NEUTRAL -> ColorRole.NEUTRAL
+    }

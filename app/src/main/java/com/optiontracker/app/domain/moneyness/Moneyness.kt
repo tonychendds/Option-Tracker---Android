@@ -1,5 +1,6 @@
 package com.optiontracker.app.domain.moneyness
 
+import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.money.Money
 
@@ -7,6 +8,22 @@ enum class Moneyness {
     ITM,
     OTM,
     ATM,
+}
+
+/** Chip color for a side. Danger is red, safe is green, ATM is grey. */
+enum class MoneynessTone {
+    DANGER,
+    SAFE,
+    NEUTRAL,
+}
+
+/**
+ * Sell: ITM danger, OTM safe. Buy: OTM danger, ITM safe. ATM is neutral either way.
+ */
+fun moneynessTone(side: OptionSide, moneyness: Moneyness): MoneynessTone = when (moneyness) {
+    Moneyness.ATM -> MoneynessTone.NEUTRAL
+    Moneyness.ITM -> if (side == OptionSide.SELL) MoneynessTone.DANGER else MoneynessTone.SAFE
+    Moneyness.OTM -> if (side == OptionSide.SELL) MoneynessTone.SAFE else MoneynessTone.DANGER
 }
 
 /**
