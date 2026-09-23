@@ -17,12 +17,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.quote.QuoteBoard
+import com.optiontracker.app.domain.quote.YahooSparkQuotes
+import com.optiontracker.app.domain.quote.underlyingQuoteLabel
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
@@ -47,7 +51,15 @@ fun PositionsRoute(
     onOpen: (Long) -> Unit,
 ) {
     val positions by viewModel.positions.collectAsStateWithLifecycle()
-    PositionsScreen(positions, onNavigate, onAdd, onOpen)
+    val quotes by viewModel.quotes.collectAsStateWithLifecycle()
+    PositionsScreen(
+        positions = positions,
+        quotes = quotes,
+        onNavigate = onNavigate,
+        onAdd = onAdd,
+        onOpen = onOpen,
+        onRefresh = viewModel::refresh,
+    )
 }
 
 @Composable
@@ -56,6 +68,8 @@ fun PositionsScreen(
     onNavigate: (String) -> Unit,
     onAdd: () -> Unit,
     onOpen: (Long) -> Unit,
+    quotes: QuoteBoard = QuoteBoard(),
+    onRefresh: () -> Unit = {},
 ) {
     TrackerScaffold(
         title = "Positions",
@@ -77,10 +91,28 @@ fun PositionsScreen(
                     },
                 )
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(positions, key = { it.id }) { position ->
-                        PositionRow(position, onClick = { onOpen(position.id) })
-                        HorizontalDivider()
+                PullToRefreshBox(
+                    isRefreshing = quotes.refreshing,
+                    onRefresh = onRefresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(positions, key = { it.id }) { position ->
+                            PositionRow(
+                                position = position,
+                                quote = underlyingQuoteLabel(position.ticker, quotes),
+                                onClick = { onOpen(position.id) },
+                            )
+                            HorizontalDivider()
+                        }
+                        item {
+                            Text(
+                                YahooSparkQuotes.DELAY_LABEL,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -89,7 +121,7 @@ fun PositionsScreen(
 }
 
 @Composable
-fun PositionRow(position: Position, onClick: () -> Unit) {
+fun PositionRow(position: Position, onClick: () -> Unit, quote: String = "") {
     val pastExpiry = position.status == PositionStatus.OPEN && position.expiry.isBefore(LocalDate.now())
     Column(
         modifier = Modifier
@@ -103,7 +135,20 @@ fun PositionRow(position: Position, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(position.ticker, style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(position.ticker, style = MaterialTheme.typography.titleMedium)
+                if (quote.isNotEmpty()) {
+                    Text(
+                        quote,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             StatusChip(text = "Open")
         }
         Text(

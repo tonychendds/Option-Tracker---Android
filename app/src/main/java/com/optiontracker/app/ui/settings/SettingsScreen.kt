@@ -160,7 +160,7 @@ fun SettingsScreen(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Not financial advice", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Option Tracker is a personal record-keeping tool. It does not provide recommendations, brokerage services, or live quotes. You are responsible for your own trading decisions.",
+                            "Option Tracker is a personal record-keeping tool. It does not provide recommendations or brokerage services. Stock prices on Positions are delayed 15+ minutes and are not option prices. You are responsible for your own trading decisions.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }

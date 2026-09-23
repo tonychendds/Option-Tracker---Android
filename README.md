@@ -108,7 +108,7 @@ Unit tests for P/L math and position create, read, update, close, and delete:
 
 Home → **+** → **Add from screenshot**, or **Add from screenshot** on the add-position screen. Pick a screenshot of a Charles Schwab trade-details page.
 
-The app reads the text **on the device** with Google ML Kit. The image is not uploaded, and the app has no network permission. OCR does not need a connection. A label on the left and its value on the right are paired by their position on the screen, so a two-column ticket still lines up.
+The app reads the text **on the device** with Google ML Kit. The image is not uploaded. OCR does not need a connection. A label on the left and its value on the right are paired by their position on the screen, so a two-column ticket still lines up.
 
 A line such as `TSLL 09/25/2026 11.00 C` supplies the ticker, expiration, strike, and call or put. **Sell to Open** and **Buy to Open** set the side. **Price** is the premium per share. **Quantity** is the number of contracts. Commission, industry fee, and similar fee lines are added together. The trade date is the open date. The order id is stored in notes.
 
@@ -154,7 +154,9 @@ Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-18,1,2.50,4.00,1.00,"rolled, ear
 
 ## Data
 
-Positions live in a Room database on the device (`option_tracker.db`). There is no login and no network permission. The account label from a CSV is stored with the trade. Theme choice is stored in DataStore.
+Positions live in a Room database on the device (`option_tracker.db`). There is no login. The account label from a CSV is stored with the trade. Theme choice is stored in DataStore.
+
+The Positions list shows a delayed last price for each underlying stock, such as `NVDA  $178.42`, with a space before the Open badge. Tickers are requested once per unique symbol from Yahoo Finance’s public spark feed (`query1.finance.yahoo.com`). No API key is required. Prices are cached for about 90 seconds, and pull-to-refresh loads them again. The list footer says quotes are delayed 15+ minutes and are not option prices. If the phone is offline or the request fails, the position stays and the price is an em dash (—). Premium profit and loss is unchanged.
 
 ## Ads and Play Billing later
 

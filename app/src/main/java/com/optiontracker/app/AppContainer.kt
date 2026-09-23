@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.optiontracker.app.data.PositionRepository
 import com.optiontracker.app.data.SettingsRepository
+import com.optiontracker.app.data.quote.YahooDelayedQuoteClient
 import androidx.room.withTransaction
 import com.optiontracker.app.data.local.OptionDatabase
 import com.optiontracker.app.ui.ReportYearStore
@@ -33,7 +34,7 @@ class AppContainer(context: Context) {
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
         initializer { DashboardViewModel(repository, reportYear) }
-        initializer { PositionsViewModel(repository) }
+        initializer { PositionsViewModel(repository, YahooDelayedQuoteClient()) }
         initializer { HistoryViewModel(repository, reportYear) }
         initializer { SettingsViewModel(settingsRepository, repository) }
         initializer { PositionDetailViewModel(repository, createSavedStateHandle()) }
