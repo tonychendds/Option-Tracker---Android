@@ -158,6 +158,8 @@ Positions live in a Room database on the device (`option_tracker.db`). There is 
 
 The Positions list shows a delayed last price for each underlying stock, such as `NVDA  $178.42`, with a space before the Open badge. Tickers are requested once per unique symbol from Yahoo Finance’s public spark feed (`query1.finance.yahoo.com`). No API key is required. Prices are cached for about 90 seconds, and pull-to-refresh loads them again. The list footer says quotes are delayed 15+ minutes and are not option prices. If the phone is offline or the request fails, the position stays and the price is an em dash (—). Premium profit and loss is unchanged.
 
+Next to that price, an open call or put is marked ITM, ATM, or OTM. ATM means the delayed stock price is within 0.5% of the strike, including an exact match. A call is ITM above that band and OTM below it. A put is the reverse. If the quote is missing, the moneyness chip is omitted.
+
 ## Ads and Play Billing later
 
 This version does not ship the AdMob SDK or Google Play Billing.

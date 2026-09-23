@@ -10,7 +10,7 @@ import java.util.Locale
  * No API key. Prices are stock prices, not option marks.
  */
 object YahooSparkQuotes {
-    const val DELAY_LABEL = "Stock quotes delayed 15+ min. Not an option price."
+    const val DELAY_LABEL = "Stock quotes delayed 15+ min. ITM, ATM, and OTM use that price. Not an option price."
     private const val CACHE_MILLIS = 90_000L
     private val symbolPattern = Regex(""""symbol"\s*:\s*"([A-Za-z0-9.-]+)"\s*""")
     private val pricePattern = Regex(

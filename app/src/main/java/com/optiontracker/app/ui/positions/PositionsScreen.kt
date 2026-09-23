@@ -22,8 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.moneyness.Moneyness
+import com.optiontracker.app.domain.moneyness.MoneynessClassifier
 import com.optiontracker.app.domain.quote.QuoteBoard
 import com.optiontracker.app.domain.quote.YahooSparkQuotes
 import com.optiontracker.app.domain.quote.underlyingQuoteLabel
@@ -98,9 +101,11 @@ fun PositionsScreen(
                 ) {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(positions, key = { it.id }) { position ->
+                            val quote = underlyingQuoteLabel(position.ticker, quotes)
                             PositionRow(
                                 position = position,
-                                quote = underlyingQuoteLabel(position.ticker, quotes),
+                                quote = quote,
+                                moneyness = MoneynessClassifier.fromQuote(position.type, position.strikeCents, quote),
                                 onClick = { onOpen(position.id) },
                             )
                             HorizontalDivider()
@@ -121,7 +126,12 @@ fun PositionsScreen(
 }
 
 @Composable
-fun PositionRow(position: Position, onClick: () -> Unit, quote: String = "") {
+fun PositionRow(
+    position: Position,
+    onClick: () -> Unit,
+    quote: String = "",
+    moneyness: Moneyness? = null,
+) {
     val pastExpiry = position.status == PositionStatus.OPEN && position.expiry.isBefore(LocalDate.now())
     Column(
         modifier = Modifier
@@ -140,13 +150,23 @@ fun PositionRow(position: Position, onClick: () -> Unit, quote: String = "") {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(position.ticker, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    position.ticker,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                )
                 if (quote.isNotEmpty()) {
                     Text(
                         quote,
+                        modifier = Modifier.weight(1f, fill = false),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                }
+                if (moneyness != null) {
+                    StatusChip(text = moneyness.name, container = moneynessColor(moneyness))
                 }
             }
             StatusChip(text = "Open")
@@ -188,4 +208,10 @@ fun PositionRow(position: Position, onClick: () -> Unit, quote: String = "") {
             )
         }
     }
+}
+
+private fun moneynessColor(moneyness: Moneyness): ColorRole = when (moneyness) {
+    Moneyness.ITM -> ColorRole.PRIMARY
+    Moneyness.OTM -> ColorRole.TERTIARY
+    Moneyness.ATM -> ColorRole.SECONDARY
 }
