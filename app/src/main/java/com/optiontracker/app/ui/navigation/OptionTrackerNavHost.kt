@@ -10,6 +10,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.optiontracker.app.ui.ocr.ScreenshotDraftStore
+import com.optiontracker.app.ui.assigned.AssignedEditorRoute
+import com.optiontracker.app.ui.assigned.AssignedEditorViewModel
+import com.optiontracker.app.ui.assigned.AssignedRoute
+import com.optiontracker.app.ui.assigned.AssignedViewModel
 import com.optiontracker.app.ui.close.ClosePositionRoute
 import com.optiontracker.app.ui.close.ClosePositionViewModel
 import com.optiontracker.app.ui.detail.PositionDetailRoute
@@ -64,6 +68,15 @@ fun OptionTrackerNavHost(
                 onOpen = { navController.navigate(Routes.detail(it)) },
             )
         }
+        composable(Routes.ASSIGNED) {
+            val viewModel: AssignedViewModel = viewModel(factory = factory)
+            AssignedRoute(
+                viewModel = viewModel,
+                onNavigate = navigateTop,
+                onAdd = { navController.navigate(Routes.assignedEditor()) },
+                onOpen = { navController.navigate(Routes.assignedEditor(it)) },
+            )
+        }
         composable(Routes.HISTORY) {
             val viewModel: HistoryViewModel = viewModel(factory = factory)
             HistoryRoute(
@@ -87,6 +100,7 @@ fun OptionTrackerNavHost(
                 onBack = { navController.popBackStack() },
                 onEdit = { navController.navigate(Routes.editor(it)) },
                 onClose = { navController.navigate(Routes.close(it)) },
+                onAssign = { navController.navigate(Routes.close(it, assigned = true)) },
             )
         }
         composable(
@@ -119,7 +133,13 @@ fun OptionTrackerNavHost(
         }
         composable(
             route = Routes.CLOSE,
-            arguments = listOf(navArgument("positionId") { type = NavType.LongType }),
+            arguments = listOf(
+                navArgument("positionId") { type = NavType.LongType },
+                navArgument("assigned") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
+            ),
         ) {
             val viewModel: ClosePositionViewModel = viewModel(factory = factory)
             ClosePositionRoute(
@@ -129,6 +149,30 @@ fun OptionTrackerNavHost(
                     navController.popBackStack()
                     navController.popBackStack()
                 },
+                onAssigned = {
+                    navController.popBackStack()
+                    navController.popBackStack()
+                    navController.navigate(Routes.ASSIGNED) {
+                        popUpTo(Routes.HOME) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = Routes.ASSIGNED_EDITOR,
+            arguments = listOf(
+                navArgument("lotId") {
+                    type = NavType.LongType
+                    defaultValue = -1L
+                },
+            ),
+        ) {
+            val viewModel: AssignedEditorViewModel = viewModel(factory = factory)
+            AssignedEditorRoute(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
             )
         }
     }

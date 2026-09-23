@@ -13,6 +13,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.money.Money
+import com.optiontracker.app.domain.pnl.AssignedPnl
 import com.optiontracker.app.domain.pnl.OptionPnl
 import com.optiontracker.app.domain.validation.Fields
 import com.optiontracker.app.domain.validation.PositionValidator
@@ -47,16 +51,21 @@ fun ClosePositionRoute(
     viewModel: ClosePositionViewModel,
     onBack: () -> Unit,
     onClosed: () -> Unit,
+    onAssigned: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (event is CloseEvent.Closed) onClosed()
+            when (event) {
+                CloseEvent.Closed -> onClosed()
+                CloseEvent.Assigned -> onAssigned()
+            }
         }
     }
     ClosePositionScreen(
         state = state,
         onBack = onBack,
+        onMode = viewModel::onMode,
         onExitDate = viewModel::onExitDate,
         onExitPremium = viewModel::onExitPremium,
         onExitFees = viewModel::onExitFees,
@@ -72,8 +81,10 @@ fun ClosePositionScreen(
     onExitPremium: (String) -> Unit,
     onExitFees: (String) -> Unit,
     onClose: () -> Unit,
+    onMode: (CloseMode) -> Unit = {},
 ) {
-    TrackerScaffold(title = "Close position", onBack = onBack) { padding ->
+    val title = if (state.mode == CloseMode.ASSIGNED) "Assign put" else "Close position"
+    TrackerScaffold(title = title, onBack = onBack) { padding ->
         ScreenColumn(padding, modifier = Modifier.fillMaxSize()) {
             when {
                 state.loading -> CenteredProgress()
@@ -87,7 +98,7 @@ fun ClosePositionScreen(
                     body = "This trade is already in History.",
                     action = { TextButton(onClick = onBack) { Text("Go back") } },
                 )
-                else -> CloseForm(state, onExitDate, onExitPremium, onExitFees, onClose)
+                else -> CloseForm(state, onMode, onExitDate, onExitPremium, onExitFees, onClose)
             }
         }
     }
@@ -96,6 +107,7 @@ fun ClosePositionScreen(
 @Composable
 private fun CloseForm(
     state: CloseUiState,
+    onMode: (CloseMode) -> Unit,
     onExitDate: (java.time.LocalDate) -> Unit,
     onExitPremium: (String) -> Unit,
     onExitFees: (String) -> Unit,
@@ -119,51 +131,108 @@ private fun CloseForm(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (state.canAssign) {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                listOf(CloseMode.CASH, CloseMode.ASSIGNED).forEachIndexed { index, mode ->
+                    SegmentedButton(
+                        selected = state.mode == mode,
+                        onClick = { onMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index, 2),
+                    ) {
+                        Text(if (mode == CloseMode.CASH) "Cash close" else "Assigned")
+                    }
+                }
+            }
+        }
         Text(
-            if (position.side == OptionSide.BUY) {
-                "Selling to close. Profit when the exit premium is higher than the entry premium."
-            } else {
-                "Buying to close. Profit when the exit premium is lower than the entry premium."
+            when {
+                state.mode == CloseMode.ASSIGNED ->
+                    "You keep the opening credit. The option closes at a $0 exit premium. Stock profit stays on Assigned."
+                position.side == OptionSide.BUY ->
+                    "Selling to close. Profit when the exit premium is higher than the entry premium."
+                else ->
+                    "Buying to close. Profit when the exit premium is lower than the entry premium."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        DateField(label = "Exit date", date = state.exitDate, onDate = onExitDate, error = null)
-        Text(
-            exitPremiumCashFlowLabel(position.side),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        DateField(
+            label = if (state.mode == CloseMode.ASSIGNED) "Assigned date" else "Exit date",
+            date = state.exitDate,
+            onDate = onExitDate,
+            error = null,
         )
-        OutlinedTextField(
-            value = state.exitPremium,
-            onValueChange = onExitPremium,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Exit premium per share") },
-            prefix = { Text("$") },
-            singleLine = true,
-            isError = state.errors.containsKey(Fields.EXIT_PREMIUM),
-            supportingText = {
-                Text(state.errors[Fields.EXIT_PREMIUM] ?: exitPremiumCashFlowHint(position.side))
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        )
-        OutlinedTextField(
-            value = state.exitFees,
-            onValueChange = onExitFees,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Exit fees (optional)") },
-            prefix = { Text("$") },
-            singleLine = true,
-            isError = state.errors.containsKey(Fields.EXIT_FEES),
-            supportingText = { Text(state.errors[Fields.EXIT_FEES] ?: "Total commissions to close") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        )
-        PreviewCard(position, state.exitPremium, state.exitFees)
-        Button(
-            onClick = onClose,
-            enabled = !state.saving,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Close position") }
+        if (state.mode == CloseMode.ASSIGNED) {
+            AssignmentPreview(position)
+            Button(
+                onClick = onClose,
+                enabled = !state.saving,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Assign put") }
+        } else {
+            Text(
+                exitPremiumCashFlowLabel(position.side),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = state.exitPremium,
+                onValueChange = onExitPremium,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Exit premium per share") },
+                prefix = { Text("$") },
+                singleLine = true,
+                isError = state.errors.containsKey(Fields.EXIT_PREMIUM),
+                supportingText = {
+                    Text(state.errors[Fields.EXIT_PREMIUM] ?: exitPremiumCashFlowHint(position.side))
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            OutlinedTextField(
+                value = state.exitFees,
+                onValueChange = onExitFees,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Exit fees (optional)") },
+                prefix = { Text("$") },
+                singleLine = true,
+                isError = state.errors.containsKey(Fields.EXIT_FEES),
+                supportingText = { Text(state.errors[Fields.EXIT_FEES] ?: "Total commissions to close") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            PreviewCard(position, state.exitPremium, state.exitFees)
+            Button(
+                onClick = onClose,
+                enabled = !state.saving,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Close position") }
+        }
+    }
+}
+
+@Composable
+private fun AssignmentPreview(position: Position) {
+    val shares = AssignedPnl.sharesForContracts(position.contracts)
+    val optionPnl = OptionPnl.realizedPnlCents(
+        side = position.side,
+        contracts = position.contracts,
+        entryPremiumCents = position.entryPremiumCents,
+        entryFeesCents = position.entryFeesCents,
+        exitPremiumCents = 0L,
+        exitFeesCents = 0L,
+    )
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Stock lot", style = MaterialTheme.typography.labelLarge)
+            Text(
+                "$shares shares of ${position.ticker} at ${Money.format(position.strikeCents)}",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                "Option realized P/L ${Money.formatSigned(optionPnl)}. That is the opening credit minus fees. It does not include the stock.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

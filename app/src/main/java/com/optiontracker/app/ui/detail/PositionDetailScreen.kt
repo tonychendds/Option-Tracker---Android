@@ -24,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.model.OptionSide
+import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
 import com.optiontracker.app.domain.money.Money
@@ -49,6 +51,7 @@ fun PositionDetailRoute(
     onBack: () -> Unit,
     onEdit: (Long) -> Unit = {},
     onClose: (Long) -> Unit = {},
+    onAssign: (Long) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
@@ -62,6 +65,7 @@ fun PositionDetailRoute(
         onBack = onBack,
         onEdit = onEdit,
         onClose = onClose,
+        onAssign = onAssign,
         onDelete = viewModel::delete,
     )
 }
@@ -73,6 +77,7 @@ fun PositionDetailScreen(
     onBack: () -> Unit,
     onEdit: (Long) -> Unit,
     onClose: (Long) -> Unit,
+    onAssign: (Long) -> Unit,
     onDelete: () -> Unit,
 ) {
     val title = when {
@@ -101,6 +106,7 @@ fun PositionDetailScreen(
                     readOnly = readOnly,
                     onEdit = { onEdit(state.position.id) },
                     onClose = { onClose(state.position.id) },
+                    onAssign = { onAssign(state.position.id) },
                     onDelete = onDelete,
                 )
             }
@@ -114,6 +120,7 @@ private fun PositionBody(
     readOnly: Boolean,
     onEdit: () -> Unit,
     onClose: () -> Unit,
+    onAssign: () -> Unit,
     onDelete: () -> Unit,
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
@@ -196,6 +203,9 @@ private fun PositionBody(
         )
         if (open && !readOnly) {
             Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text("Edit") }
+            if (position.side == OptionSide.SELL && position.type == OptionType.PUT) {
+                Button(onClick = onAssign, modifier = Modifier.fillMaxWidth()) { Text("Assigned") }
+            }
             Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text("Close position") }
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Delete")

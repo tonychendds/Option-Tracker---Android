@@ -160,6 +160,14 @@ The Positions list shows a delayed last price for each underlying stock, such as
 
 Next to that price, an open call or put is marked ITM, ATM, or OTM. ATM means the delayed stock price is within 0.5% of the strike, including an exact match. A call is ITM above that band and OTM below it. A put is the reverse. If the quote is missing, the moneyness chip is omitted. Chip color follows the side: a short ITM and a long OTM are red, a short OTM and a long ITM are green, and ATM is grey.
 
+## Assigned puts
+
+**Assigned** in the bottom bar lists shares from short puts that were assigned. Each row shows the ticker, cost basis (the put’s strike per share), the same delayed stock quote, the assigned date, the share count (contracts × 100), and unrealized P/L: `(quote − cost basis) × shares`. Pull down to refresh. If the quote is missing, the price and the P/L are an em dash. The footer says the quote is delayed.
+
+On an open short put, **Assigned** closes the option at a $0 exit premium so the opening credit, minus fees, stays on that option. It does not mix stock profit into the option. The new lot is linked to that closed trade. Cash close is still available. A past assignment can be added by hand with a ticker, cost basis, shares or contracts, and date. Editing changes the cost basis, shares, and date. Deleting removes the stock lot only and does not reopen the option.
+
+Call assignment, where shares are called away, is not in this version.
+
 ## Ads and Play Billing later
 
 This version does not ship the AdMob SDK or Google Play Billing.

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Layers
@@ -45,6 +46,7 @@ private data class Tab(val route: String, val label: String, val icon: ImageVect
 private val tabs = listOf(
     Tab(Routes.HOME, "Home", Icons.Filled.Home),
     Tab(Routes.POSITIONS, "Positions", Icons.Filled.Layers),
+    Tab(Routes.ASSIGNED, "Assigned", Icons.AutoMirrored.Filled.Assignment),
     Tab(Routes.HISTORY, "History", Icons.Filled.History),
     Tab(Routes.SETTINGS, "Settings", Icons.Filled.Settings),
 )
