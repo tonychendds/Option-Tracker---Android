@@ -44,7 +44,7 @@ class AppContainer(context: Context) {
 
     val viewModelFactory: ViewModelProvider.Factory = viewModelFactory {
         initializer { DashboardViewModel(repository, reportYear) }
-        initializer { PositionsViewModel(repository, quotes) }
+        initializer { PositionsViewModel(repository, quotes, quotes) }
         initializer { AssignedViewModel(assignedLots, quotes) }
         initializer { HistoryViewModel(repository, reportYear) }
         initializer { SettingsViewModel(settingsRepository, repository) }

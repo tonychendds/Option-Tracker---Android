@@ -13,6 +13,11 @@ fun interface UnderlyingQuoteSource {
     suspend fun fetch(tickers: Set<String>): Map<String, String>
 }
 
+fun interface ContractQuoteSource {
+    /** Formatted premiums keyed by OCC symbol. Missing keys were not returned. */
+    suspend fun fetchPremiums(symbols: Set<String>): Map<String, String>
+}
+
 fun quoteKey(ticker: String): String = ticker.trim().uppercase(Locale.US)
 
 /** Label beside a ticker. Blank while a quote is still loading. */

@@ -29,6 +29,7 @@ import com.optiontracker.app.domain.moneyness.Moneyness
 import com.optiontracker.app.domain.moneyness.MoneynessClassifier
 import com.optiontracker.app.domain.moneyness.MoneynessTone
 import com.optiontracker.app.domain.moneyness.moneynessTone
+import com.optiontracker.app.domain.quote.OccSymbol
 import com.optiontracker.app.domain.quote.QuoteBoard
 import com.optiontracker.app.domain.quote.YahooSparkQuotes
 import com.optiontracker.app.domain.quote.underlyingQuoteLabel
@@ -58,9 +59,11 @@ fun PositionsRoute(
 ) {
     val positions by viewModel.positions.collectAsStateWithLifecycle()
     val quotes by viewModel.quotes.collectAsStateWithLifecycle()
+    val contracts by viewModel.contracts.collectAsStateWithLifecycle()
     PositionsScreen(
         positions = positions,
         quotes = quotes,
+        contracts = contracts,
         onNavigate = onNavigate,
         onAdd = onAdd,
         onOpen = onOpen,
@@ -75,6 +78,7 @@ fun PositionsScreen(
     onAdd: () -> Unit,
     onOpen: (Long) -> Unit,
     quotes: QuoteBoard = QuoteBoard(),
+    contracts: QuoteBoard = QuoteBoard(),
     onRefresh: () -> Unit = {},
 ) {
     TrackerScaffold(
@@ -98,7 +102,7 @@ fun PositionsScreen(
                 )
             } else {
                 PullToRefreshBox(
-                    isRefreshing = quotes.refreshing,
+                    isRefreshing = quotes.refreshing || contracts.refreshing,
                     onRefresh = onRefresh,
                     modifier = Modifier.fillMaxSize(),
                 ) {
@@ -108,6 +112,7 @@ fun PositionsScreen(
                             PositionRow(
                                 position = position,
                                 quote = quote,
+                                premiumLine = OccSymbol.premiumLine(position, contracts),
                                 moneyness = MoneynessClassifier.fromQuote(position.type, position.strikeCents, quote),
                                 onClick = { onOpen(position.id) },
                             )
@@ -133,6 +138,7 @@ fun PositionRow(
     position: Position,
     onClick: () -> Unit,
     quote: String = "",
+    premiumLine: String = "entry ${Money.format(position.entryPremiumCents)}",
     moneyness: Moneyness? = null,
 ) {
     val pastExpiry = position.status == PositionStatus.OPEN && position.expiry.isBefore(LocalDate.now())
@@ -186,7 +192,11 @@ fun PositionRow(
             style = MaterialTheme.typography.bodyMedium,
             color = if (pastExpiry) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             StatusChip(
                 text = sideLabel(position.side),
                 container = if (position.side.name == "BUY") ColorRole.SECONDARY else ColorRole.TERTIARY,
@@ -203,9 +213,11 @@ fun PositionRow(
                     }
                     append(contractsLabel(position.contracts))
                     append(" · ")
-                    append(Money.format(position.entryPremiumCents))
-                    append(" premium")
+                    append(premiumLine)
                 },
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

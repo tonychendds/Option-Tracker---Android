@@ -1,6 +1,8 @@
 package com.optiontracker.app.data.quote
 
+import com.optiontracker.app.domain.quote.ContractQuoteSource
 import com.optiontracker.app.domain.quote.UnderlyingQuoteSource
+import com.optiontracker.app.domain.quote.YahooOptionQuotes
 import com.optiontracker.app.domain.quote.YahooSparkQuotes
 import com.optiontracker.app.domain.quote.quoteKey
 import java.net.HttpURLConnection
@@ -8,8 +10,8 @@ import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Delayed underlying stock prices. Failures return no prices so the list can keep going. */
-class YahooDelayedQuoteClient : UnderlyingQuoteSource {
+/** Delayed stock prices and option premiums. Failures return no prices so the list can keep going. */
+class YahooDelayedQuoteClient : UnderlyingQuoteSource, ContractQuoteSource {
     override suspend fun fetch(tickers: Set<String>): Map<String, String> = withContext(Dispatchers.IO) {
         val keys = tickers.map { quoteKey(it) }.filter { it.isNotEmpty() }.distinct()
         if (keys.isEmpty()) return@withContext emptyMap()
@@ -22,6 +24,17 @@ class YahooDelayedQuoteClient : UnderlyingQuoteSource {
                 val price = parsed[yahoo] ?: continue
                 owners.forEach { merged[it] = price }
             }
+        }
+        merged
+    }
+
+    override suspend fun fetchPremiums(symbols: Set<String>): Map<String, String> = withContext(Dispatchers.IO) {
+        val keys = symbols.map { it.trim().uppercase() }.filter { it.isNotEmpty() }.distinct()
+        if (keys.isEmpty()) return@withContext emptyMap()
+        val merged = linkedMapOf<String, String>()
+        for (chunk in keys.chunked(40)) {
+            val body = read(YahooSparkQuotes.endpoint(chunk)) ?: continue
+            merged.putAll(YahooOptionQuotes.parse(body))
         }
         merged
     }
