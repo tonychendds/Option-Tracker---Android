@@ -226,9 +226,9 @@ private fun DashboardContent(
                     )
                     Text(
                         if (summary.closedYearCount == 1) {
-                            "1 closed trade"
+                            "1 trade closed in this year"
                         } else {
-                            "${summary.closedYearCount} closed trades"
+                            "${summary.closedYearCount} trades closed in this year"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -245,9 +245,9 @@ private fun DashboardContent(
                     )
                     Text(
                         if (summary.closedThisMonthCount == 1) {
-                            "1 closed trade"
+                            "1 closed trade opened this month"
                         } else {
-                            "${summary.closedThisMonthCount} closed trades"
+                            "${summary.closedThisMonthCount} closed trades opened this month"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

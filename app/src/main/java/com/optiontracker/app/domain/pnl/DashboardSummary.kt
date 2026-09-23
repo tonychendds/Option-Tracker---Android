@@ -44,8 +44,7 @@ fun buildDashboardSummary(
 ): DashboardSummary {
     val month = YearMonth.from(today)
     val closedThisMonth = closed.filter { position ->
-        position.status == PositionStatus.CLOSED &&
-            position.closedOn?.let { YearMonth.from(it) == month } == true
+        position.status == PositionStatus.CLOSED && YearMonth.from(position.openedOn) == month
     }
     val yearTotal = realizedYearTotal(closed, selectedYear)
     val years = (availableReportYears(closed, today) + selectedYear).distinct().sortedDescending()

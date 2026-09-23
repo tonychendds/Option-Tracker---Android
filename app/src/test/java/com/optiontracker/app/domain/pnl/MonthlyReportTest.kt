@@ -12,7 +12,7 @@ import org.junit.Test
 
 class MonthlyReportTest {
     @Test
-    fun listsEveryMonthAndUsesCloseDateAndOverride() {
+    fun listsEveryMonthByOpenDateAndUsesOverride() {
         val open = closed(
             id = 1,
             closedOn = LocalDate.of(2026, 3, 1),
@@ -96,6 +96,8 @@ class MonthlyReportTest {
         assertEquals(1.0 / 3.0, september.hitRate!!, 0.0001)
 
         assertEquals(0, rows[2].tradeCount)
+        // These fixtures open and close in the same month, so the open-month
+        // report and the close-year total describe the same trades.
         assertEquals(rows.sumOf { it.totalCents }, realizedYearTotal(positions, 2026).totalCents)
         assertEquals(rows.sumOf { it.tradeCount }, realizedYearTotal(positions, 2026).tradeCount)
 
@@ -105,9 +107,52 @@ class MonthlyReportTest {
         assertEquals(0, prior.sumOf { it.tradeCount } - 1)
     }
 
+    @Test
+    fun realizedPnlStaysInTheOpenMonth() {
+        val openedSeptemberClosedOctober = closed(
+            id = 1,
+            closedOn = LocalDate.of(2026, 10, 16),
+            openedOn = LocalDate.of(2026, 9, 2),
+            realizedOverrideCents = 4_000L,
+        )
+        val alsoSeptember = closed(
+            id = 2,
+            closedOn = LocalDate.of(2026, 9, 30),
+            openedOn = LocalDate.of(2026, 9, 18),
+            realizedOverrideCents = 1_500L,
+        )
+        val stillOpen = closed(
+            id = 3,
+            closedOn = LocalDate.of(2026, 9, 20),
+            openedOn = LocalDate.of(2026, 9, 1),
+            status = PositionStatus.OPEN,
+            realizedOverrideCents = 9_900L,
+        )
+        val positions = listOf(openedSeptemberClosedOctober, alsoSeptember, stillOpen)
+
+        val rows = monthlyReport(positions, 2026)
+        val september = rows[8]
+        val october = rows[9]
+        assertEquals(4_000L + 1_500L, september.totalCents)
+        assertEquals(2, september.tradeCount)
+        assertEquals(2, september.winningCount)
+        assertEquals(0L, october.totalCents)
+        assertEquals(0, october.tradeCount)
+
+        val groups = groupClosedTrades(positions.filter { it.status == PositionStatus.CLOSED }, "")
+        assertEquals(listOf(YearMonth.of(2026, 9)), groups.map { it.yearMonth })
+        assertEquals(4_000L + 1_500L, groups.single().totalPnlCents)
+
+        // YTD remains the calendar year of the close date, so both closes are in 2026.
+        val year = realizedYearTotal(positions, 2026)
+        assertEquals(4_000L + 1_500L, year.totalCents)
+        assertEquals(2, year.tradeCount)
+    }
+
     private fun closed(
         id: Long,
         closedOn: LocalDate,
+        openedOn: LocalDate = closedOn,
         status: PositionStatus = PositionStatus.CLOSED,
         side: OptionSide = OptionSide.BUY,
         premium: Long = 100,
@@ -125,7 +170,7 @@ class MonthlyReportTest {
         contracts = 1,
         entryPremiumCents = premium,
         entryFeesCents = fees,
-        openedOn = closedOn.minusDays(10),
+        openedOn = openedOn,
         notes = "",
         status = status,
         exitPremiumCents = exitPremium,

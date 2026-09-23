@@ -12,8 +12,8 @@ Bottom navigation: **Home**, **Positions**, **History**, **Settings**.
 - **Add from screenshot** reads a Charles Schwab “Trade Transaction Details” image on the device and opens the add form already filled in. You review the fields and tap Save. Nothing is stored until then.
 - Edit an open position, or delete it.
 - Close a position with an exit date, exit premium, and optional fees. The app computes realized P/L and moves the trade to History.
-- Home summarizes open premium cash flow, contract counts, realized P/L for the current month, realized P/L for the selected calendar year, and recent activity.
-- History lists closed trades by month, shows that year's total and a January–December report, and can filter by ticker. Closed trades are read-only. Home and History share the year. Chips appear when closed trades span more than the current year.
+- Home summarizes open premium cash flow, contract counts, realized P/L for trades **opened** this month, realized P/L for the selected calendar year, and recent activity.
+- History lists closed trades under the month they were **opened**, shows that year's close-date total and a January–December report, and can filter by ticker. Closed trades are read-only. Home and History share the year. Chips appear when open or close dates span more than the current year.
 - Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. Remove ads and export are placeholders.
 
 Home and History show a banner **advertisement placeholder**. No AdMob app id or ad unit id is in this project.
@@ -57,11 +57,13 @@ Examples:
 | Buy 1 contract at $2.50 with a $1.00 fee. Close at $4.00 with a $1.00 fee. | $148.00 profit |
 | Sell 2 contracts at $3.00 with a $1.30 fee. Close at $1.20 with a $1.30 fee. | $357.40 profit |
 
-A $0 exit premium is allowed, for a contract that expired worthless. Realized P/L for the current month uses the exit date.
+A $0 exit premium is allowed, for a contract that expired worthless.
 
-**YTD** is the sum of realized P/L for closed trades whose close date falls in the selected calendar year, from January 1 through December 31. The default year is the current year. A prior year can be chosen when the log spans more than one year. Open positions are not included. The same figure is the **Year total** at the top of History for that year, and the ticker filter narrows it. An imported close date is the expiration date, so a closed trade dated later this year is included in that year's total.
+**Months use the open date.** If a trade was opened in September and closed in October, its realized P/L counts in September only. Home’s “this month” card uses that same rule for the current month. History’s month lists and the January–December report do too. A position that is still open has no realized P/L and is left out.
 
-**Monthly report** on History lists January through December for that same year. Each row shows realized P/L, how many trades closed, and the hit rate. Hit rate is the share of those closes whose realized P/L is greater than zero. A breakeven result is not a hit. A month with no closes shows zero profit and no hit rate. The sheet's max-profit column is not stored, so the report does not sum it. Tap a month that has trades to jump to that month's list. The ticker filter applies to the report and the lists.
+**YTD stays on the close date.** It is the sum of realized P/L for closed trades whose close date falls in the selected calendar year, from January 1 through December 31. The default year is the current year. A prior year can be chosen when opens or closes span more than one year. Open positions are not included. The same figure is the **Year total** at the top of History for that year, and the ticker filter narrows it. An imported close date is the expiration date, so a closed trade that expires later this year is included in that year's total even when it was opened the year before. Because of that, the year total can differ from the sum of the open-month rows when a trade crosses a calendar year.
+
+**Monthly report** on History lists January through December of the open year. Each row shows realized P/L, how many closed trades were opened that month, and the hit rate. Hit rate is the share of those closes whose realized P/L is greater than zero. A breakeven result is not a hit. A month with no closes shows zero profit and no hit rate. The sheet's max-profit column is not stored, so the report does not sum it. Tap a month that has trades to jump to that month's list. The ticker filter applies to the report and the lists.
 
 ### Spreadsheet realized P/L
 
@@ -69,7 +71,7 @@ A closed CSV row may include `realizedOverride`, a dollar profit or loss from th
 
 If `realizedOverride` is blank, realized P/L is calculated from premiums and fees as above. The sheet's single `fees` column is stored as the opening fee, and the exit fee is zero, so the fee is subtracted once.
 
-The sheet has no exit date. A closed import uses the expiration date as the close date, which is what History groups by.
+The sheet has no exit date. A closed import uses the expiration date as the close date. That date is what the year total uses. History month groups use the open date instead.
 
 ## Open in Android Studio
 

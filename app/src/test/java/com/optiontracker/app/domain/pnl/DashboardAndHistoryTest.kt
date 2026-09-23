@@ -63,17 +63,20 @@ class DashboardAndHistoryTest {
         val januaryOverride = closedThisMonth().copy(
             id = 5,
             ticker = "MSFT",
+            openedOn = LocalDate.of(2026, 1, 5),
             closedOn = LocalDate.of(2026, 1, 15),
             realizedOverrideCents = 100L,
         )
         val december = closedLastMonth().copy(
             id = 6,
+            openedOn = LocalDate.of(2026, 12, 1),
             closedOn = LocalDate.of(2026, 12, 18),
             realizedOverrideCents = -2_000L,
         )
         val priorYear = closedThisMonth().copy(
             id = 7,
             ticker = "IWM",
+            openedOn = LocalDate.of(2025, 11, 1),
             closedOn = LocalDate.of(2025, 11, 3),
             realizedOverrideCents = 5_000L,
         )
@@ -107,6 +110,7 @@ class DashboardAndHistoryTest {
         val priorYear = closedThisMonth().copy(
             id = 7,
             ticker = "IWM",
+            openedOn = LocalDate.of(2025, 11, 1),
             closedOn = LocalDate.of(2025, 11, 3),
             realizedOverrideCents = 5_000L,
         )
@@ -117,6 +121,53 @@ class DashboardAndHistoryTest {
         assertEquals(total.totalCents, months.sumOf { it.totalPnlCents })
         assertEquals(14_800L + 6_000L, total.totalCents)
         assertEquals(5_000L, realizedYearTotal(closed, 2025).totalCents)
+    }
+
+    @Test
+    fun homeMonthUsesOpenDateAndYtdKeepsCloseYear() {
+        val openedSeptemberClosedOctober = closedThisMonth().copy(
+            id = 8,
+            openedOn = LocalDate.of(2026, 9, 4),
+            closedOn = LocalDate.of(2026, 10, 16),
+            realizedOverrideCents = 2_500L,
+        )
+        val stillOpen = longCall().copy(realizedOverrideCents = 9_900L)
+        val openedLastDecemberClosedThisJanuary = closedThisMonth().copy(
+            id = 9,
+            openedOn = LocalDate.of(2025, 12, 20),
+            closedOn = LocalDate.of(2026, 1, 8),
+            realizedOverrideCents = 800L,
+        )
+        val closed = listOf(openedSeptemberClosedOctober, openedLastDecemberClosedThisJanuary)
+        val summary = buildDashboardSummary(
+            open = listOf(stillOpen),
+            closed = closed,
+            today = today,
+            selectedYear = 2026,
+        )
+        assertEquals(2_500L, summary.realizedThisMonthCents)
+        assertEquals(1, summary.closedThisMonthCount)
+        assertEquals(2_500L + 800L, summary.realizedYearCents)
+        assertEquals(2, summary.closedYearCount)
+
+        val september = buildDashboardSummary(
+            open = emptyList(),
+            closed = closed,
+            today = LocalDate.of(2026, 10, 1),
+            selectedYear = 2026,
+        )
+        assertEquals(0L, september.realizedThisMonthCents)
+        assertEquals(0, september.closedThisMonthCount)
+
+        val report = monthlyReport(closed + stillOpen, 2026)
+        assertEquals(2_500L, report[8].totalCents)
+        assertEquals(1, report[8].tradeCount)
+        assertEquals(0, report[0].tradeCount)
+        val priorDecember = monthlyReport(closed, 2025)[11]
+        assertEquals(800L, priorDecember.totalCents)
+        assertEquals(1, priorDecember.tradeCount)
+        assertEquals(800L, realizedYearTotal(closed, 2026).totalCents - 2_500L)
+        assertEquals(0L, realizedYearTotal(closed, 2025).totalCents)
     }
 
     private fun longCall() = position(

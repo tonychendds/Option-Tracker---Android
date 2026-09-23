@@ -77,7 +77,7 @@ fun HistoryScreen(
             if (!state.hasAnyClosed) {
                 EmptyState(
                     title = "No closed trades",
-                    body = "When you close a position, the realized profit or loss is listed here by month.",
+                    body = "When you close a position, its realized profit or loss is listed under the month you opened it.",
                 )
             } else {
                 HistoryList(state, onQuery, onSelectYear, onOpen)
@@ -144,9 +144,9 @@ private fun HistoryList(
                 }
                 Text(
                     if (state.yearTradeCount == 1) {
-                        "1 closed trade"
+                        "1 trade closed in this year"
                     } else {
-                        "${state.yearTradeCount} closed trades"
+                        "${state.yearTradeCount} trades closed in this year"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -167,12 +167,12 @@ private fun HistoryList(
             item {
                 EmptyState(
                     title = if (state.query.isBlank()) {
-                        "No closed trades in ${state.selectedYear}"
+                        "No trades opened in ${state.selectedYear}"
                     } else {
                         "No matching trades"
                     },
                     body = if (state.query.isBlank()) {
-                        "Closed trades from other years stay on their own year."
+                        "Closed trades opened in another year are listed under that year."
                     } else {
                         "No closed trades use that ticker."
                     },
@@ -236,9 +236,9 @@ private fun MonthlyReportTable(
         Text("Monthly report", style = MaterialTheme.typography.titleMedium)
         Text(
             if (filtered) {
-                "January–December for this ticker. Hit rate is the share of closes with a profit. Tap a month to see its trades."
+                "January–December for this ticker, by the month the trade was opened. A later close still counts in that month. Hit rate is the share of those closes with a profit."
             } else {
-                "January–December. Hit rate is the share of closes with a profit. Tap a month to see its trades."
+                "January–December by the month the trade was opened. A later close still counts in that month. Hit rate is the share of those closes with a profit."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

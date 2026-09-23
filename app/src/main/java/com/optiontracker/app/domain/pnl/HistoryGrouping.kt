@@ -18,13 +18,13 @@ fun groupClosedTrades(closed: List<Position>, tickerQuery: String): List<History
         closed.filter { it.ticker.contains(query, ignoreCase = true) }
     }
     return filtered
-        .mapNotNull { position -> position.closedOn?.let { closedOn -> closedOn to position } }
-        .groupBy({ YearMonth.from(it.first) }, { it.second })
+        .groupBy { YearMonth.from(it.openedOn) }
         .entries
         .sortedByDescending { it.key }
         .map { (month, trades) ->
             val ordered = trades.sortedWith(
-                compareByDescending<Position> { it.closedOn ?: LocalDate.MIN }
+                compareByDescending<Position> { it.openedOn }
+                    .thenByDescending { it.closedOn ?: LocalDate.MIN }
                     .thenByDescending { it.id },
             )
             HistoryMonth(
