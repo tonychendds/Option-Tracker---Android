@@ -12,7 +12,7 @@ Bottom navigation: **Home**, **Positions**, **History**, **Settings**.
 - **Add from screenshot** reads a Charles Schwab “Trade Transaction Details” image on the device and opens the add form already filled in. You review the fields and tap Save. Nothing is stored until then.
 - Edit an open position, or delete it.
 - Close a position with an exit date, exit premium, and optional fees. The app computes realized P/L and moves the trade to History.
-- Home summarizes open premium cash flow, contract counts, realized P/L for trades **opened** this month, realized P/L for the selected calendar year, and recent activity.
+- Home summarizes open premium cash flow, contract counts, realized P/L for trades **opened** this month, realized P/L for the selected calendar year, and a bar chart of realized P/L by the month those trades were **opened**. The chart follows the selected year. A year still in progress shows January through the current month; a past year shows January through December. Empty months are zero.
 - History lists closed trades under the month they were **opened**, shows that year's close-date total and a January–December report, and can filter by ticker. Open a closed trade to edit its premiums, fees, dates, or a realized P/L override, or to delete it. Home and History share the year. Chips appear when open or close dates span more than the current year.
 - Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. Remove ads and export are placeholders.
 

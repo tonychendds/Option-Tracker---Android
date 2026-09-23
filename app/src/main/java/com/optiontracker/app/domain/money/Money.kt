@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.math.abs
 
 object Money {
     private val amountPattern = Regex("""\d+(\.\d{1,2})?""")
@@ -104,6 +105,26 @@ object Money {
     fun formatSigned(cents: Long): String {
         val formatted = format(cents)
         return if (cents > 0) "+$formatted" else formatted
+    }
+
+    /**
+     * Compact signed dollars for a chart axis, such as `+$16.7k` or `-$2k`.
+     * Amounts under $1,000 stay in whole dollars. Zero is `$0`.
+     */
+    fun formatChart(cents: Long): String {
+        val dollars = BigDecimal.valueOf(abs(cents), 2)
+        val (scaled, suffix) = when {
+            dollars >= BigDecimal("1000000") ->
+                dollars.divide(BigDecimal("1000000"), 1, RoundingMode.HALF_UP) to "M"
+            dollars >= BigDecimal("100000") ->
+                dollars.divide(BigDecimal("1000"), 0, RoundingMode.HALF_UP) to "k"
+            dollars >= BigDecimal("1000") ->
+                dollars.divide(BigDecimal("1000"), 1, RoundingMode.HALF_UP) to "k"
+            else -> dollars.setScale(0, RoundingMode.HALF_UP) to ""
+        }
+        if (scaled.signum() == 0) return "$0"
+        val body = "$${scaled.stripTrailingZeros().toPlainString()}$suffix"
+        return if (cents < 0) "-$body" else "+$body"
     }
 
     fun toInput(cents: Long): String =

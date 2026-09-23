@@ -54,8 +54,6 @@ fun OptionTrackerNavHost(
                 viewModel = viewModel,
                 onNavigate = navigateTop,
                 onAdd = { navController.navigate(Routes.editor()) },
-                onOpenPosition = { navController.navigate(Routes.detail(it)) },
-                onOpenHistory = { navController.navigate(Routes.historyDetail(it)) },
                 recognizeScreenshot = recognizeScreenshot,
                 onScreenshot = { result ->
                     screenshotDrafts.offer(result)

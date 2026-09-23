@@ -7,17 +7,6 @@ import com.optiontracker.app.domain.model.PositionStatus
 import java.time.LocalDate
 import java.time.YearMonth
 
-enum class ActivityKind {
-    OPENED,
-    CLOSED,
-}
-
-data class RecentActivity(
-    val position: Position,
-    val kind: ActivityKind,
-    val date: LocalDate,
-)
-
 data class DashboardSummary(
     val openCount: Int,
     val openContracts: Int,
@@ -32,14 +21,14 @@ data class DashboardSummary(
     val availableYears: List<Int>,
     val realizedYearCents: Long,
     val closedYearCount: Int,
-    val recent: List<RecentActivity>,
+    /** Closed trades grouped by the month they were opened. January through December, or through [today]'s month when [selectedYear] is the current year. */
+    val monthlyRealized: List<MonthReportRow>,
 )
 
 fun buildDashboardSummary(
     open: List<Position>,
     closed: List<Position>,
     today: LocalDate,
-    recentLimit: Int = 5,
     selectedYear: Int = today.year,
 ): DashboardSummary {
     val month = YearMonth.from(today)
@@ -48,18 +37,8 @@ fun buildDashboardSummary(
     }
     val yearTotal = realizedYearTotal(closed, selectedYear)
     val years = (availableReportYears(closed, today) + selectedYear).distinct().sortedDescending()
-    val recent = (
-        open.map { RecentActivity(it, ActivityKind.OPENED, it.openedOn) } +
-            closed.mapNotNull { position ->
-                position.closedOn?.let { RecentActivity(position, ActivityKind.CLOSED, it) }
-            }
-        )
-        .sortedWith(
-            compareByDescending<RecentActivity> { it.date }
-                .thenByDescending { it.position.updatedAtEpochMillis }
-                .thenByDescending { it.position.id },
-        )
-        .take(recentLimit)
+    val throughMonth = if (selectedYear == today.year) today.monthValue else 12
+    val monthlyRealized = monthlyReport(closed, selectedYear).take(throughMonth)
 
     return DashboardSummary(
         openCount = open.size,
@@ -75,6 +54,6 @@ fun buildDashboardSummary(
         availableYears = years,
         realizedYearCents = yearTotal.totalCents,
         closedYearCount = yearTotal.tradeCount,
-        recent = recent,
+        monthlyRealized = monthlyRealized,
     )
 }

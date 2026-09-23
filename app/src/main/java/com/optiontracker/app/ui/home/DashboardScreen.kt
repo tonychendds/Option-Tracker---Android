@@ -1,6 +1,5 @@
 package com.optiontracker.app.ui.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,21 +31,12 @@ import androidx.compose.ui.unit.dp
 import com.optiontracker.app.domain.ocr.BrokerParseResult
 import com.optiontracker.app.ui.ocr.rememberScreenshotImport
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.optiontracker.app.domain.model.PositionStatus
 import com.optiontracker.app.domain.money.Money
-import com.optiontracker.app.domain.pnl.ActivityKind
-import com.optiontracker.app.domain.pnl.RecentActivity
-import com.optiontracker.app.domain.pnl.realizedPnlCents
 import com.optiontracker.app.domain.pnl.ytdLabel
-import com.optiontracker.app.ui.components.EmptyState
 import com.optiontracker.app.ui.components.ScreenColumn
 import com.optiontracker.app.ui.components.TrackerScaffold
 import com.optiontracker.app.ui.components.YearSelector
-import com.optiontracker.app.ui.format.contractsLabel
-import com.optiontracker.app.ui.format.formatDate
 import com.optiontracker.app.ui.format.pnlColor
-import com.optiontracker.app.ui.format.sideLabel
-import com.optiontracker.app.ui.format.typeLabel
 import com.optiontracker.app.ui.navigation.Routes
 
 @Composable
@@ -54,8 +44,6 @@ fun DashboardRoute(
     viewModel: DashboardViewModel,
     onNavigate: (String) -> Unit,
     onAdd: () -> Unit,
-    onOpenPosition: (Long) -> Unit,
-    onOpenHistory: (Long) -> Unit,
     recognizeScreenshot: suspend (Uri) -> String,
     onScreenshot: (BrokerParseResult) -> Unit,
 ) {
@@ -72,13 +60,6 @@ fun DashboardRoute(
         onAdd = onAdd,
         onAddFromScreenshot = pickScreenshot,
         readingScreenshot = reading,
-        onOpenActivity = { activity ->
-            if (activity.position.status == PositionStatus.OPEN) {
-                onOpenPosition(activity.position.id)
-            } else {
-                onOpenHistory(activity.position.id)
-            }
-        },
         onSelectYear = viewModel::selectYear,
     )
 }
@@ -88,7 +69,6 @@ fun DashboardScreen(
     state: DashboardUiState,
     onNavigate: (String) -> Unit,
     onAdd: () -> Unit,
-    onOpenActivity: (RecentActivity) -> Unit,
     onSelectYear: (Int) -> Unit = {},
     onAddFromScreenshot: () -> Unit = {},
     readingScreenshot: Boolean = false,
@@ -117,7 +97,7 @@ fun DashboardScreen(
                     CircularProgressIndicator()
                 }
             }
-            is DashboardUiState.Ready -> DashboardContent(padding, state, onOpenActivity, onSelectYear)
+            is DashboardUiState.Ready -> DashboardContent(padding, state, onSelectYear)
         }
     }
     if (showAddMenu) {
@@ -168,13 +148,13 @@ fun DashboardScreen(
 private fun DashboardContent(
     padding: PaddingValues,
     state: DashboardUiState.Ready,
-    onOpenActivity: (RecentActivity) -> Unit,
     onSelectYear: (Int) -> Unit,
 ) {
     val summary = state.summary
     ScreenColumn(padding) {
         Column(
             modifier = Modifier
+                .padding(bottom = 80.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -254,17 +234,10 @@ private fun DashboardContent(
                     )
                 }
             }
-            Text("Recent activity", style = MaterialTheme.typography.titleMedium)
-            if (summary.recent.isEmpty()) {
-                EmptyState(
-                    title = "No trades yet",
-                    body = "Add an open option position. When you close it, realized profit or loss shows up here and in History.",
-                )
-            } else {
-                summary.recent.forEach { activity ->
-                    ActivityRow(activity, onClick = { onOpenActivity(activity) })
-                }
-            }
+            MonthlyRealizedChart(
+                rows = summary.monthlyRealized,
+                year = summary.selectedYear,
+            )
         }
     }
 }
@@ -279,38 +252,3 @@ private fun StatCard(label: String, value: String, modifier: Modifier = Modifier
     }
 }
 
-@Composable
-private fun ActivityRow(activity: RecentActivity, onClick: () -> Unit) {
-    val position = activity.position
-    val kind = if (activity.kind == ActivityKind.OPENED) "Opened" else "Closed"
-    val pnl = if (activity.kind == ActivityKind.CLOSED) position.realizedPnlCents() else null
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(position.ticker, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "$kind · ${sideLabel(position.side)} ${contractsLabel(position.contracts)} ${typeLabel(position.type)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    formatDate(activity.date),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (pnl != null) {
-                Text(Money.formatSigned(pnl), color = pnlColor(pnl), style = MaterialTheme.typography.titleMedium)
-            }
-        }
-    }
-}

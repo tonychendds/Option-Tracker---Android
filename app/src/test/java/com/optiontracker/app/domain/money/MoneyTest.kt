@@ -55,4 +55,17 @@ class MoneyTest {
         assertEquals("-$1.00", Money.formatSigned(-100))
         assertEquals("$0.00", Money.formatSigned(0))
     }
+
+    @Test
+    fun formatsChartScale() {
+        assertEquals("$0", Money.formatChart(0))
+        assertEquals("$0", Money.formatChart(40))
+        assertEquals("+$60", Money.formatChart(6_000))
+        assertEquals("+$148", Money.formatChart(14_800))
+        assertEquals("+$2k", Money.formatChart(200_000))
+        assertEquals("+$16.7k", Money.formatChart(1_665_199))
+        assertEquals("+$129k", Money.formatChart(12_881_799))
+        assertEquals("-$4.2k", Money.formatChart(-420_000))
+        assertEquals("+$1.2M", Money.formatChart(120_000_000))
+    }
 }

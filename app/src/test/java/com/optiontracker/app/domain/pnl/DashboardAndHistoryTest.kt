@@ -31,15 +31,51 @@ class DashboardAndHistoryTest {
     }
 
     @Test
-    fun recentActivityPrefersNewerDates() {
+    fun monthlyChartUsesOpenMonthThroughToday() {
+        val openedDecember = closedThisMonth().copy(
+            id = 11,
+            openedOn = LocalDate.of(2026, 12, 2),
+            closedOn = LocalDate.of(2026, 12, 18),
+            realizedOverrideCents = 9_000L,
+        )
         val summary = buildDashboardSummary(
             open = listOf(longCall()),
-            closed = listOf(closedThisMonth()),
+            closed = listOf(closedThisMonth(), closedLastMonth(), openedDecember),
             today = today,
-            recentLimit = 5,
+            selectedYear = 2026,
         )
-        assertEquals(ActivityKind.CLOSED, summary.recent.first().kind)
-        assertEquals(LocalDate.of(2026, 9, 10), summary.recent.first().date)
+        assertEquals(9, summary.monthlyRealized.size)
+        assertEquals(YearMonth.of(2026, 1), summary.monthlyRealized.first().yearMonth)
+        assertEquals(YearMonth.of(2026, 9), summary.monthlyRealized.last().yearMonth)
+        assertEquals(0L, summary.monthlyRealized[0].totalCents)
+        assertEquals(0, summary.monthlyRealized[0].tradeCount)
+        assertEquals(6_000L, summary.monthlyRealized[7].totalCents)
+        assertEquals(14_800L, summary.monthlyRealized[8].totalCents)
+        assertEquals(1, summary.monthlyRealized[8].tradeCount)
+        assertEquals(false, summary.monthlyRealized.any { it.totalCents == 9_000L })
+
+        val loss = closedLastMonth().copy(
+            id = 12,
+            openedOn = LocalDate.of(2025, 3, 2),
+            closedOn = LocalDate.of(2025, 3, 20),
+            realizedOverrideCents = -4_200L,
+        )
+        val carried = closedThisMonth().copy(
+            id = 13,
+            openedOn = LocalDate.of(2025, 11, 1),
+            closedOn = LocalDate.of(2026, 1, 4),
+            realizedOverrideCents = 5_000L,
+        )
+        val prior = buildDashboardSummary(
+            open = emptyList(),
+            closed = listOf(loss, carried),
+            today = today,
+            selectedYear = 2025,
+        )
+        assertEquals(12, prior.monthlyRealized.size)
+        assertEquals(-4_200L, prior.monthlyRealized[2].totalCents)
+        assertEquals(5_000L, prior.monthlyRealized[10].totalCents)
+        assertEquals(0L, prior.monthlyRealized[11].totalCents)
     }
 
     @Test
