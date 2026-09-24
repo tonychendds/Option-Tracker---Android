@@ -3,6 +3,8 @@ package com.optiontracker.app.ui.positions
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,9 +24,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.optiontracker.app.domain.dte.DteTone
+import com.optiontracker.app.domain.dte.daysToExpiration
+import com.optiontracker.app.domain.dte.dteDescription
+import com.optiontracker.app.domain.dte.dteLabel
+import com.optiontracker.app.domain.dte.dteTone
 import com.optiontracker.app.domain.moneyness.Moneyness
 import com.optiontracker.app.domain.moneyness.MoneynessClassifier
 import com.optiontracker.app.domain.moneyness.MoneynessTone
@@ -133,6 +142,7 @@ fun PositionsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PositionRow(
     position: Position,
@@ -154,10 +164,11 @@ fun PositionRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
+            FlowRow(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     position.ticker,
@@ -167,7 +178,6 @@ fun PositionRow(
                 if (quote.isNotEmpty()) {
                     Text(
                         quote,
-                        modifier = Modifier.weight(1f, fill = false),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -177,8 +187,9 @@ fun PositionRow(
                 if (moneyness != null) {
                     StatusChip(text = moneyness.name, container = moneynessColor(position.side, moneyness))
                 }
+                DaysRemainingChip(position.expiry)
             }
-            StatusChip(text = "Open")
+            StatusChip(text = "Open", modifier = Modifier.padding(start = 8.dp))
         }
         Text(
             buildString {
@@ -231,3 +242,18 @@ private fun moneynessColor(side: OptionSide, moneyness: Moneyness): ColorRole =
         MoneynessTone.SAFE -> ColorRole.SAFE
         MoneynessTone.NEUTRAL -> ColorRole.NEUTRAL
     }
+
+@Composable
+private fun DaysRemainingChip(expiry: LocalDate) {
+    val days = daysToExpiration(LocalDate.now(), expiry)
+    val role = when (dteTone(days)) {
+        DteTone.URGENT -> ColorRole.DANGER
+        DteTone.SOON -> ColorRole.AMBER
+        DteTone.NEUTRAL -> ColorRole.NEUTRAL
+    }
+    StatusChip(
+        text = dteLabel(days),
+        container = role,
+        modifier = Modifier.semantics { contentDescription = dteDescription(days) },
+    )
+}

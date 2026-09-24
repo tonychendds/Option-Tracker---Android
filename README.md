@@ -162,6 +162,8 @@ The same row keeps the entry premium and adds a delayed quote for that contract,
 
 Next to that price, an open call or put is marked ITM, ATM, or OTM. ATM means the delayed stock price is within 0.5% of the strike, including an exact match. A call is ITM above that band and OTM below it. A put is the reverse. If the quote is missing, the moneyness chip is omitted. Chip color follows the side: a short ITM and a long OTM are red, a short OTM and a long ITM are green, and ATM is grey.
 
+Immediately after that chip, days to expiration uses calendar days from the device date to the expiration date. Expiration day is `0d`. Tomorrow is `1d`. A date already past is `Expired`. The chip is grey until a week out, amber from 7 days through 2 days, and red on the last day, expiration day, or after expiry. The ticker, price, and chips wrap together if the row is narrow. The Open badge stays on the right.
+
 ## Symbols
 
 History → **Symbols** lists realized option P/L by ticker. The default period is the same year as Home, labeled like `2026 YTD`, and uses the **close date**. **All** includes every closed year. **Largest** puts the biggest winners and losers first. **A–Z** sorts by ticker. Each row shows the trade count, wins, losses, and hit rate. A stored realized P/L override is included. Open trades and assigned stock lots are not. Tap a ticker to see the closed trades in that total.
