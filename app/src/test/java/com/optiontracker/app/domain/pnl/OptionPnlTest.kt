@@ -4,6 +4,7 @@ import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
+import com.optiontracker.app.domain.money.Money
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -108,6 +109,36 @@ class OptionPnlTest {
         assertEquals(84_000L, cleared.realizedPnlCents())
 
         assertEquals(null, computed.copy(status = PositionStatus.OPEN).realizedPnlCents())
+    }
+
+    @Test
+    fun unrealizedPremiumUsesSideAndIgnoresFees() {
+        // AMD sell call, entry $0.59, now $80.25, 3 contracts.
+        val shortLoss = OptionPnl.unrealizedPremiumCents(
+            side = OptionSide.SELL,
+            contracts = 3,
+            entryPremiumCents = 59,
+            currentPremiumCents = 8_025,
+        )
+        assertEquals(-2_389_800L, shortLoss)
+        assertEquals("-$23,898.00", Money.formatSigned(shortLoss))
+
+        val longGain = OptionPnl.unrealizedPremiumCents(
+            side = OptionSide.BUY,
+            contracts = 1,
+            entryPremiumCents = 180,
+            currentPremiumCents = 720,
+        )
+        assertEquals(54_000L, longGain)
+        assertEquals("+$540.00", Money.formatSigned(longGain))
+
+        val flat = OptionPnl.unrealizedPremiumCents(
+            side = OptionSide.SELL,
+            contracts = 1,
+            entryPremiumCents = 150,
+            currentPremiumCents = 150,
+        )
+        assertEquals(0L, flat)
     }
 
     @Test

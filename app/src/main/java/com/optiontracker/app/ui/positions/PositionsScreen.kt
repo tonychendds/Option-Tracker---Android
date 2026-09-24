@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,13 +37,11 @@ import com.optiontracker.app.domain.dte.dteLabel
 import com.optiontracker.app.domain.dte.dteTone
 import com.optiontracker.app.domain.moneyness.Moneyness
 import com.optiontracker.app.domain.moneyness.MoneynessClassifier
-import com.optiontracker.app.domain.moneyness.MoneynessTone
-import com.optiontracker.app.domain.moneyness.moneynessTone
+import com.optiontracker.app.domain.pnl.OptionPnl
 import com.optiontracker.app.domain.quote.OccSymbol
 import com.optiontracker.app.domain.quote.QuoteBoard
 import com.optiontracker.app.domain.quote.YahooSparkQuotes
 import com.optiontracker.app.domain.quote.underlyingQuoteLabel
-import com.optiontracker.app.domain.model.OptionSide
 import com.optiontracker.app.domain.model.OptionType
 import com.optiontracker.app.domain.model.Position
 import com.optiontracker.app.domain.model.PositionStatus
@@ -54,6 +53,7 @@ import com.optiontracker.app.ui.components.StatusChip
 import com.optiontracker.app.ui.components.TrackerScaffold
 import com.optiontracker.app.ui.format.contractsLabel
 import com.optiontracker.app.ui.format.formatDate
+import com.optiontracker.app.ui.format.pnlColor
 import com.optiontracker.app.ui.format.sideLabel
 import com.optiontracker.app.ui.format.typeLabel
 import com.optiontracker.app.ui.navigation.Routes
@@ -123,6 +123,7 @@ fun PositionsScreen(
                                 quote = quote,
                                 premiumLine = OccSymbol.premiumLine(position, contracts),
                                 moneyness = MoneynessClassifier.fromQuote(position.type, position.strikeCents, quote),
+                                unrealizedPnlCents = unrealizedPremiumCents(position, contracts),
                                 onClick = { onOpen(position.id) },
                             )
                             HorizontalDivider()
@@ -150,6 +151,7 @@ fun PositionRow(
     quote: String = "",
     premiumLine: String = "entry ${Money.format(position.entryPremiumCents)}",
     moneyness: Moneyness? = null,
+    unrealizedPnlCents: Long? = null,
 ) {
     val pastExpiry = position.status == PositionStatus.OPEN && position.expiry.isBefore(LocalDate.now())
     Column(
@@ -184,8 +186,8 @@ fun PositionRow(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (moneyness != null) {
-                    StatusChip(text = moneyness.name, container = moneynessColor(position.side, moneyness))
+                if (moneyness == Moneyness.ITM) {
+                    StatusChip(text = "ITM", container = ColorRole.DANGER)
                 }
                 DaysRemainingChip(position.expiry)
             }
@@ -232,16 +234,32 @@ fun PositionRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (unrealizedPnlCents != null) {
+                Text(
+                    Money.formatSigned(unrealizedPnlCents),
+                    color = pnlColor(unrealizedPnlCents),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
 
-private fun moneynessColor(side: OptionSide, moneyness: Moneyness): ColorRole =
-    when (moneynessTone(side, moneyness)) {
-        MoneynessTone.DANGER -> ColorRole.DANGER
-        MoneynessTone.SAFE -> ColorRole.SAFE
-        MoneynessTone.NEUTRAL -> ColorRole.NEUTRAL
+private fun unrealizedPremiumCents(position: Position, contracts: QuoteBoard): Long? {
+    val current = OccSymbol.currentPremiumCents(position, contracts) ?: return null
+    return try {
+        OptionPnl.unrealizedPremiumCents(
+            side = position.side,
+            contracts = position.contracts,
+            entryPremiumCents = position.entryPremiumCents,
+            currentPremiumCents = current,
+        )
+    } catch (_: ArithmeticException) {
+        null
     }
+}
 
 @Composable
 private fun DaysRemainingChip(expiry: LocalDate) {

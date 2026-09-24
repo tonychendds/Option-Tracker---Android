@@ -49,4 +49,13 @@ object OccSymbol {
             else -> "$entry · now $now"
         }
     }
+
+    /** Delayed option premium in cents, or null while loading or after a failed quote. */
+    fun currentPremiumCents(position: Position, board: QuoteBoard): Long? {
+        val symbol = yahoo(position.ticker, position.type, position.strikeCents, position.expiry)
+            ?: return null
+        val now = underlyingQuoteLabel(symbol, board)
+        if (now.isEmpty() || now == "—") return null
+        return Money.parseRoundedCents(now)
+    }
 }

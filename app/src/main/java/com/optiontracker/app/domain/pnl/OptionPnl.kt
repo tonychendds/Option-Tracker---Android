@@ -20,8 +20,8 @@ import com.optiontracker.app.domain.model.PositionStatus
  *     Sell to open: (entry notional − exit notional) − entry fees − exit fees
  *
  * Closing does not ask for a side. A buy is closed by selling, and a sell is
- * closed by buying. There is no live underlying price, so open positions contribute
- * premium cash flow only, not mark-to-market P/L.
+ * closed by buying. Home still treats an open position as premium cash flow only.
+ * Positions can show a separate unrealized mark from the delayed option premium.
  */
 object OptionPnl {
     const val EQUITY_CONTRACT_MULTIPLIER = 100
@@ -69,6 +69,26 @@ object OptionPnl {
             OptionSide.SELL -> Math.subtractExact(entryNotional, exitNotional)
         }
         return Math.subtractExact(Math.subtractExact(gross, entryFeesCents), exitFeesCents)
+    }
+
+    /**
+     * Unrealized premium P/L for an open contract. Fees are not included.
+     *
+     * Short: (entry premium − current premium) × contracts × 100
+     * Long:  (current premium − entry premium) × contracts × 100
+     */
+    fun unrealizedPremiumCents(
+        side: OptionSide,
+        contracts: Int,
+        entryPremiumCents: Long,
+        currentPremiumCents: Long,
+    ): Long {
+        val entry = notionalCents(entryPremiumCents, contracts)
+        val current = notionalCents(currentPremiumCents, contracts)
+        return when (side) {
+            OptionSide.SELL -> Math.subtractExact(entry, current)
+            OptionSide.BUY -> Math.subtractExact(current, entry)
+        }
     }
 }
 

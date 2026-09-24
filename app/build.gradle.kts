@@ -13,8 +13,8 @@ android {
         applicationId = "com.optiontracker.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 20
-        versionName = "1.0.18"
+        versionCode = 21
+        versionName = "1.0.19"
     }
 
     buildTypes {
