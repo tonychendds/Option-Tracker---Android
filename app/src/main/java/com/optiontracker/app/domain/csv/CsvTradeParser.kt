@@ -36,9 +36,11 @@ data class CsvImportResult(
 /**
  * Parses a Google Sheet CSV export.
  *
- * Closed rows use the expiration date as the close date, because the sheet has no
- * separate exit date. The single `fees` column is stored as opening fees and exit
- * fees are zero, so a calculated P/L subtracts that amount once.
+ * Closed rows use `closeDate` when that column is present and filled. Files from
+ * before that column existed, and rows that leave it blank, still use the
+ * expiration date as the close date. The single `fees` column is stored as
+ * opening fees and exit fees are zero, so a calculated P/L subtracts that amount
+ * once. An export writes opening fees plus closing fees into that same column.
  *
  * When `realizedOverride` is present on a closed row, that dollar amount is the
  * realized P/L shown in the app. Entry and exit premiums are still stored, but
@@ -77,7 +79,8 @@ object CsvTradeParser {
                 "Missing column${if (missing.size == 1) "" else "s"}: ${missing.joinToString(", ") { columnLabel(it) }}.",
             )
         }
-        if (header.filter { it in requiredColumns }.groupingBy { it }.eachCount().any { it.value > 1 }) {
+        val trackedColumns = requiredColumns + "closedate"
+        if (header.filter { it in trackedColumns }.groupingBy { it }.eachCount().any { it.value > 1 }) {
             return CsvImportResult.unreadable("The header row repeats a column name.")
         }
         val index = header.withIndex().associate { it.value to it.index }
@@ -173,6 +176,16 @@ object CsvTradeParser {
             return RowMapping.Bad("Premium and contract count are too large")
         }
         val closed = status == PositionStatus.CLOSED
+        val closedOn = if (!closed) {
+            null
+        } else {
+            val closeIndex = index["closedate"]
+            val closeText = if (closeIndex == null) "" else cells.getOrNull(closeIndex)?.trim().orEmpty()
+            when {
+                closeText.isEmpty() -> expiry
+                else -> parseDate(closeText) ?: return RowMapping.Bad("Close date must be yyyy-MM-dd")
+            }
+        }
         return RowMapping.Ok(
             Position(
                 id = 0L,
@@ -189,7 +202,7 @@ object CsvTradeParser {
                 status = status,
                 exitPremiumCents = if (closed) exitPremium else null,
                 exitFeesCents = if (closed) 0L else null,
-                closedOn = if (closed) expiry else null,
+                closedOn = closedOn,
                 createdAtEpochMillis = 0L,
                 updatedAtEpochMillis = 0L,
                 account = account,
@@ -213,6 +226,7 @@ object CsvTradeParser {
     private fun columnLabel(name: String): String = when (name) {
         "opendate" -> "openDate"
         "expdate" -> "expDate"
+        "closedate" -> "closeDate"
         "entrypremium" -> "entryPremium"
         "exitpremium" -> "exitPremium"
         "realizedoverride" -> "realizedOverride"

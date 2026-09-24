@@ -14,7 +14,7 @@ Bottom navigation: **Home**, **Positions**, **History**, **Settings**.
 - Close a position with an exit date, exit premium, and optional fees. The app computes realized P/L and moves the trade to History.
 - Home summarizes open premium cash flow, contract counts, realized P/L for trades **opened** this month, realized P/L for the selected calendar year, and a bar chart of realized P/L by the month those trades were **opened**. The chart follows the selected year. A year still in progress shows January through the current month; a past year shows January through December. Empty months are zero.
 - History lists closed trades under the month they were **opened**, shows that year's close-date total and a January–December report, and can filter by ticker. Open a closed trade to edit its premiums, fees, dates, or a realized P/L override, or to delete it. Home and History share the year. Chips appear when open or close dates span more than the current year.
-- Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. Remove ads and export are placeholders.
+- Settings: light, dark, or system theme. Currency is US dollars. **Import CSV** replaces the trades on the phone with a spreadsheet export. **Export trades** saves every open and closed trade through the system save dialog. Remove ads is a placeholder.
 
 Home and History show a banner **advertisement placeholder**. No AdMob app id or ad unit id is in this project.
 
@@ -125,8 +125,10 @@ Settings → **Import CSV** opens a file picker. The file stays on the device; n
 The header row is required. Names are matched without regard to case:
 
 ```text
-status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+status,account,ticker,side,right,strike,openDate,expDate,closeDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
 ```
+
+`closeDate` is optional. A file without that column still imports. A closed row with a blank `closeDate` uses `expDate`, which is how the older sheet was defined. When `closeDate` is filled, that date is the close date.
 
 | Column | Values |
 | --- | --- |
@@ -136,21 +138,25 @@ status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,
 | side | `Buy` or `Sell` |
 | right | `Call` or `Put` |
 | strike | Strike price in dollars. `11.0` is $11.00. Extra decimals are rounded half-up to the nearest cent. |
-| openDate, expDate | `yyyy-MM-dd` |
+| openDate, expDate, closeDate | `yyyy-MM-dd`. `closeDate` is only required when the column is present and the cell is filled. |
 | contracts | Whole number of contracts |
 | entryPremium | Premium per share. Blank is not allowed. Extra decimals are rounded half-up to the nearest cent. |
 | exitPremium | Premium per share. Blank is fine for an open trade. A closed trade needs this or `realizedOverride`. `0.0000` is a zero premium. Extra decimals are rounded half-up to the nearest cent. |
-| fees | Dollars, blank means 0 |
+| fees | Dollars, blank means 0. Export writes opening fees plus closing fees. Import stores that total as opening fees and sets closing fees to zero, so realized P/L stays the same. |
 | notes | Optional text. Quotes are allowed when the note contains a comma. |
 | realizedOverride | Optional dollar P/L for a closed trade. See above. |
 
 Example:
 
 ```csv
-status,account,ticker,side,right,strike,openDate,expDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
-Open,CASH,SPY,Sell,Put,500,2026-09-01,2026-10-16,2,3.00,,0.65,hedge,
-Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-18,1,2.50,4.00,1.00,"rolled, earnings",148.00
+status,account,ticker,side,right,strike,openDate,expDate,closeDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+Open,CASH,SPY,Sell,Put,500,2026-09-01,2026-10-16,,2,3.00,,0.65,hedge,
+Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-18,2026-09-18,1,2.50,4.00,1.00,"rolled, earnings",148.00
 ```
+
+The older header without `closeDate` still imports. Premiums stay per share and positive. `realizedOverride` is dollars when present.
+
+**Export trades** opens the system save dialog (`text/csv`) with a suggested name `option-tracker-trades-YYYY-MM-DD.csv`. The file lists every open and closed option trade and uses the header above, including `closeDate`. A snackbar reports how many trades were saved, or a clear error. **Share trades** opens the Android share sheet with the same file. Assigned stock lots are not in the export.
 
 ## Data
 
@@ -183,7 +189,7 @@ This version does not ship the AdMob SDK or Google Play Billing.
 - Banner slots on Home and History are a labeled placeholder composable. Do not drop a real ad unit id into that composable without a privacy policy and the Play Console ad setup.
 - Settings has a disabled **Remove ads** action. A future build can add Play Billing as a one-time product and hide the placeholder when the purchase is owned. No product id is configured now.
 - **Import CSV** reads a local file through the system file picker. It does not use the network.
-- **Export trades** explains that export is not available and does not write a file.
+- **Export trades** writes a local CSV through the system save dialog. **Share trades** sends that same CSV through the Android share sheet. Neither uses the network.
 
 ## Out of scope for v1
 

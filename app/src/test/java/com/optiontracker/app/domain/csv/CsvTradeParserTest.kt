@@ -103,6 +103,25 @@ class CsvTradeParserTest {
     }
 
     @Test
+    fun closeDateIsUsedWhenPresentAndExpirationRemainsTheFallback() {
+        val result = CsvTradeParser.parse(
+            """
+            status,account,ticker,side,right,strike,openDate,expDate,closeDate,contracts,entryPremium,exitPremium,fees,notes,realizedOverride
+            Closed,IRA,AAPL,Buy,Call,200,2026-09-01,2026-09-18,2026-10-02,1,2.50,4.00,1.00,,
+            Closed,HSA,QQQ,Sell,Put,400,2026-08-01,2026-08-21,,1,1.00,0.40,0,,
+            Closed,CASH,SPY,Sell,Put,500,2026-07-01,2026-07-17,not-a-date,1,1.00,0.10,0,,
+            """.trimIndent(),
+        )
+        assertNull(result.fileError)
+        assertEquals(2, result.closedCount)
+        assertEquals(1, result.skippedCount)
+        assertEquals(LocalDate.of(2026, 10, 2), result.positions[0].closedOn)
+        assertEquals(LocalDate.of(2026, 9, 18), result.positions[0].expiry)
+        assertEquals(LocalDate.of(2026, 8, 21), result.positions[1].closedOn)
+        assertTrue(result.errors.single().contains("Close date"))
+    }
+
+    @Test
     fun missingHeaderDoesNotProduceTrades() {
         val result = CsvTradeParser.parse("ticker,side\nAAPL,Buy\n")
         assertFalse(result.replacedExisting)
